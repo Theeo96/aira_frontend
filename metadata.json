@@ -1,0 +1,5 @@
+{
+  "name": "LumiRami",
+  "description": "An emotional and rational AI companion, providing both empathetic support and logical efficiency.",
+  "requestFramePermissions": ["microphone"]
+}
