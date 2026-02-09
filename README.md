@@ -1,8 +1,6 @@
-# MS_AI_Final_Front
+# MS AI 최종 프로젝트 프론트
+안녕하세요. 루미라미입니다.
 
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/drive/1NJ1QwRvx4DFn25gY1tcIEUEqwwsCDT92
 
 ## Run Locally
 
