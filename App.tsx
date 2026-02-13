@@ -250,7 +250,7 @@ const App: React.FC = () => {
 
         {/* Aurora Effect Container */}
         <div
-          className={`aurora-container absolute bottom-0 inset-x-0 h-[60%] transition-opacity duration-500 ${isListening ? "opacity-100" : "opacity-80"}`}
+          className={`aurora-container absolute bottom-0 inset-x-0 h-[50%] transition-opacity duration-500 ${isListening ? "opacity-100" : "opacity-80"}`}
         >
           {activePersonas.includes("lumi") && (
             <div
@@ -799,7 +799,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="relative h-screen w-full max-w-[500px] mx-auto overflow-hidden bg-[#F0EEE9] shadow-2xl">
+    <div className="relative h-[calc(100vh-4rem)] w-full max-w-[500px] mx-auto overflow-hidden bg-[#F0EEE9] shadow-2xl">
       {/* Background decoration for Home */}
       {appState === AppState.HOME && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-white/30 blur-[100px] rounded-full -z-10"></div>
