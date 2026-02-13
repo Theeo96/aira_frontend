@@ -448,12 +448,7 @@ const App: React.FC = () => {
       case AppState.PERMISSION:
         return (
           <>
-            <Header
-              onMenuClick={() => {}}
-              personas={activePersonas}
-              togglePersona={togglePersona}
-              currentScreen={appState}
-            />
+            <Header onMenuClick={() => {}} currentScreen={appState} />
             {renderHome()}
             {renderMicPermission()}
           </>
@@ -461,12 +456,7 @@ const App: React.FC = () => {
       case AppState.ONBOARDING_1:
         return (
           <>
-            <Header
-              onMenuClick={() => {}}
-              personas={activePersonas}
-              togglePersona={togglePersona}
-              currentScreen={appState}
-            />
+            <Header onMenuClick={() => {}} currentScreen={appState} />
             {renderHome()}
             {renderLocationPermission()}
           </>
@@ -474,12 +464,7 @@ const App: React.FC = () => {
       case AppState.ONBOARDING_2:
         return (
           <>
-            <Header
-              onMenuClick={() => {}}
-              personas={activePersonas}
-              togglePersona={togglePersona}
-              currentScreen={appState}
-            />
+            <Header onMenuClick={() => {}} currentScreen={appState} />
             {renderHome()}
             {renderOnboarding()}
           </>
@@ -489,8 +474,6 @@ const App: React.FC = () => {
           <>
             <Header
               onMenuClick={() => {}}
-              personas={activePersonas}
-              togglePersona={togglePersona}
               currentScreen={appState}
               goBack={() => setAppState(AppState.HOME)}
             />
@@ -654,8 +637,6 @@ const App: React.FC = () => {
         {appState !== AppState.SPLASH && appState !== AppState.PERMISSION && (
           <Header
             onMenuClick={() => setIsDrawerOpen(true)}
-            personas={activePersonas}
-            togglePersona={togglePersona}
             currentScreen={appState}
             goBack={() => setAppState(AppState.HOME)}
           />
