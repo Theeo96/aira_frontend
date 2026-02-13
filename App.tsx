@@ -16,6 +16,7 @@ import {
   Mail,
   Keyboard,
   Settings,
+  MapPin,
 } from "lucide-react";
 
 const App: React.FC = () => {
@@ -88,12 +89,12 @@ const App: React.FC = () => {
   const renderSplash = () => (
     <div className="h-screen w-full flex items-center justify-center bg-[#F0EEE9]">
       <div className="w-32 h-32 bg-[#D9D9D9] rounded-full flex items-center justify-center shadow-md">
-        <span className="text-xl font-bold">Logo</span>
+        <span className="text-xl font-bold">AIRA</span>
       </div>
     </div>
   );
 
-  const renderPermission = () => (
+  const renderMicPermission = () => (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4">
       <div className="bg-white w-fit rounded-[40px] p-10 flex flex-col items-center shadow-2xl animate-slide-up">
         <Mic size={48} className="mb-6 text-black" />
@@ -115,6 +116,37 @@ const App: React.FC = () => {
           </button>
           <button
             onClick={() => setAppState(AppState.ONBOARDING_1)}
+            className="w-full py-2 text-2xl font-medium"
+          >
+            허용 안 함
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderLocationPermission = () => (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4">
+      <div className="bg-white w-fit rounded-[40px] p-10 flex flex-col items-center shadow-2xl animate-slide-up">
+        <MapPin size={48} className="mb-6 text-black" />
+        <p className="text-center font-medium mb-12 text-gray-800 text-lg">
+          AIRA에서 이 기기의 위치 정보에 액세스하도록 허용하시겠습니까?
+        </p>
+        <div className="w-full flex flex-col gap-6">
+          <button
+            onClick={() => setAppState(AppState.ONBOARDING_2)}
+            className="w-full py-2 text-2xl font-medium"
+          >
+            앱 사용중에만 허용
+          </button>
+          <button
+            onClick={() => setAppState(AppState.ONBOARDING_2)}
+            className="w-full py-2 text-2xl font-medium"
+          >
+            이번만 허용
+          </button>
+          <button
+            onClick={() => setAppState(AppState.ONBOARDING_2)}
             className="w-full py-2 text-2xl font-medium"
           >
             허용 안 함
@@ -423,10 +455,23 @@ const App: React.FC = () => {
               currentScreen={appState}
             />
             {renderHome()}
-            {renderPermission()}
+            {renderMicPermission()}
           </>
         );
       case AppState.ONBOARDING_1:
+        return (
+          <>
+            <Header
+              onMenuClick={() => {}}
+              personas={activePersonas}
+              togglePersona={togglePersona}
+              currentScreen={appState}
+            />
+            {renderHome()}
+            {renderLocationPermission()}
+          </>
+        );
+      case AppState.ONBOARDING_2:
         return (
           <>
             <Header
