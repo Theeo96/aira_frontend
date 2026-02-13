@@ -14,16 +14,12 @@ import { AppState, Persona } from "../types";
 
 interface HeaderProps {
   onMenuClick: () => void;
-  personas: Persona[];
-  togglePersona: (p: Persona) => void;
   currentScreen: AppState;
   goBack?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   onMenuClick,
-  personas,
-  togglePersona,
   currentScreen,
   goBack,
 }) => {
@@ -56,31 +52,7 @@ export const Header: React.FC<HeaderProps> = ({
             {currentScreen === AppState.EMAIL && "이메일 관리"}
             {currentScreen === AppState.SCHEDULE && "일정 관리"}
           </h1>
-        ) : (
-          <div className="flex rounded-md overflow-hidden border border-gray-300">
-            <button
-              onClick={() => togglePersona("lumi")}
-              className={`px-4 py-1 text-sm font-bold transition-all bg-[#FF8A65] text-black ${
-                personas.includes("lumi")
-                  ? "opacity-100"
-                  : "opacity-30 hover:opacity-100"
-              }`}
-            >
-              루미
-            </button>
-            <div className="w-[1px] bg-gray-300"></div>
-            <button
-              onClick={() => togglePersona("rami")}
-              className={`px-4 py-1 text-sm font-bold transition-all bg-[#4DD0E1] text-black ${
-                personas.includes("rami")
-                  ? "opacity-100"
-                  : "opacity-30 hover:opacity-100"
-              }`}
-            >
-              라미
-            </button>
-          </div>
-        )}
+        ) : null}
       </div>
 
       <div className="w-12"></div>
@@ -108,7 +80,7 @@ export const Drawer: React.FC<DrawerProps> = ({
         onClick={onClose}
       />
       <div
-        className={`absolute top-0 left-0 h-full w-[85%] bg-white transition-transform duration-300 ease-out ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`absolute top-0 left-0 h-full w-[85%] md:w-[40%] lg:w-[30%] bg-white transition-transform duration-300 ease-out ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="p-8 h-full flex flex-col">
           <div className="flex justify-between items-center mb-10">
