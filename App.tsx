@@ -1,4 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
+import {
+  requestMicPermission,
+  requestLocationPermission,
+  requestWakeLock,
+} from "./services/permissionService";
 import { AppState, Persona } from "./types";
 import { COLORS, PERSONA_DATA } from "./constants";
 import { Header, Drawer } from "./components/Layout";
@@ -147,27 +152,29 @@ const App: React.FC = () => {
 
   const renderMicPermission = () => (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4">
-      <div className="bg-white w-fit rounded-[40px] p-10 flex flex-col items-center shadow-2xl animate-slide-up">
+      <div className="bg-white w-full max-w-sm rounded-[40px] p-8 flex flex-col items-center shadow-2xl animate-slide-up">
         <Mic size={48} className="mb-6 text-black" />
-        <p className="text-center font-medium mb-12 text-gray-800 text-lg">
-          AIRA에서 오디오를 녹음하도록 허용하시겠습니까?
+        <p className="text-center font-bold mb-10 text-gray-800 text-lg leading-snug">
+          AIRA에서 오디오를 녹음하도록
+          <br />
+          허용하시겠습니까?
         </p>
-        <div className="w-full flex flex-col gap-6">
+        <div className="w-full flex flex-col gap-3">
           <button
-            onClick={() => setAppState(AppState.ONBOARDING_1)}
-            className="w-full py-2 text-2xl font-medium"
+            onClick={handleMicPermission}
+            className="w-full py-4 bg-[#F0EEE9] rounded-2xl font-bold text-gray-900 active:scale-95 transition-transform"
           >
-            앱 사용중에만 허용
+            앱 사용 중에만 허용
           </button>
           <button
-            onClick={() => setAppState(AppState.ONBOARDING_1)}
-            className="w-full py-2 text-2xl font-medium"
+            onClick={handleMicPermission}
+            className="w-full py-4 bg-[#F0EEE9] rounded-2xl font-bold text-gray-900 active:scale-95 transition-transform"
           >
             이번만 허용
           </button>
           <button
-            onClick={() => setAppState(AppState.ONBOARDING_1)}
-            className="w-full py-2 text-2xl font-medium"
+            onClick={() => alert("권한이 필요합니다.")}
+            className="w-full py-4 bg-[#F0EEE9] rounded-2xl font-bold text-gray-900 active:scale-95 transition-transform"
           >
             허용 안 함
           </button>
@@ -178,31 +185,44 @@ const App: React.FC = () => {
 
   const renderLocationPermission = () => (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4">
-      <div className="bg-white w-fit rounded-[40px] p-10 flex flex-col items-center shadow-2xl animate-slide-up">
+      <div className="bg-white w-full max-w-sm rounded-[40px] p-8 flex flex-col items-center shadow-2xl animate-slide-up">
         <MapPin size={48} className="mb-6 text-black" />
-        <p className="text-center font-medium mb-12 text-gray-800 text-lg">
-          AIRA에서 이 기기의 위치 정보에 액세스하도록 허용하시겠습니까?
+        <p className="text-center font-bold mb-10 text-gray-800 text-lg leading-snug">
+          AIRA에서 기기의 위치에
+          <br />
+          액세스하도록 허용하시겠습니까?
         </p>
-        <div className="w-full flex flex-col gap-6">
+        <div className="w-full flex flex-col gap-3">
           <button
-            onClick={() => setAppState(AppState.ONBOARDING_2)}
-            className="w-full py-2 text-2xl font-medium"
+            onClick={handleLocationPermission}
+            className="w-full py-4 bg-[#F0EEE9] rounded-2xl font-bold text-gray-900 active:scale-95 transition-transform"
           >
-            앱 사용중에만 허용
+            앱 사용 중에만 허용
           </button>
           <button
-            onClick={() => setAppState(AppState.ONBOARDING_2)}
-            className="w-full py-2 text-2xl font-medium"
+            onClick={handleLocationPermission}
+            className="w-full py-4 bg-[#F0EEE9] rounded-2xl font-bold text-gray-900 active:scale-95 transition-transform"
           >
             이번만 허용
           </button>
           <button
-            onClick={() => setAppState(AppState.ONBOARDING_2)}
-            className="w-full py-2 text-2xl font-medium"
+            onClick={() => alert("권한이 필요합니다.")}
+            className="w-full py-4 bg-[#F0EEE9] rounded-2xl font-bold text-gray-900 active:scale-95 transition-transform"
           >
             허용 안 함
           </button>
         </div>
+      </div>
+    </div>
+  );
+  const renderSplash = () => (
+    <div className="h-screen w-full flex items-center justify-center bg-[#F0EEE9]">
+      <div className="w-48 h-48 flex items-center justify-center animate-pulse">
+        <img
+          src="/aira-logo.png"
+          alt="AIRA Logo"
+          className="w-full h-full object-contain"
+        />
       </div>
     </div>
   );
@@ -605,7 +625,7 @@ const App: React.FC = () => {
       case AppState.PERMISSION:
         return (
           <>
-            <Header onMenuClick={() => {}} currentScreen={appState} />
+            <Header onMenuClick={() => { }} currentScreen={appState} />
             {renderHome()}
             {renderMicPermission()}
           </>
@@ -613,7 +633,7 @@ const App: React.FC = () => {
       case AppState.ONBOARDING_1:
         return (
           <>
-            <Header onMenuClick={() => {}} currentScreen={appState} />
+            <Header onMenuClick={() => { }} currentScreen={appState} />
             {renderHome()}
             {renderLocationPermission()}
           </>
@@ -621,7 +641,7 @@ const App: React.FC = () => {
       case AppState.ONBOARDING_2:
         return (
           <>
-            <Header onMenuClick={() => {}} currentScreen={appState} />
+            <Header onMenuClick={() => { }} currentScreen={appState} />
             {renderHome()}
             {renderOnboarding()}
           </>
@@ -630,7 +650,7 @@ const App: React.FC = () => {
         return (
           <>
             <Header
-              onMenuClick={() => {}}
+              onMenuClick={() => { }}
               currentScreen={appState}
               goBack={() => setAppState(AppState.HOME)}
             />
