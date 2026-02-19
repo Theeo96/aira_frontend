@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   requestMicPermission,
+  requestCameraPermission,
   requestLocationPermission,
   requestWakeLock,
 } from "./services/permissionService";
@@ -138,17 +139,51 @@ const App: React.FC = () => {
     setInputText((prev) => prev.slice(0, -1));
   };
 
-  const renderSplash = () => (
-    <div className="h-screen w-full flex items-center justify-center bg-[#FDFBF7]">
-      <div className="w-48 h-48 flex items-center justify-center">
-        <img
-          src="/aira-logo.png"
-          alt="AIRA Logo"
-          className="w-full h-full object-contain animate-pulse"
-        />
-      </div>
-    </div>
-  );
+  const handleMicPermission = async () => {
+    const granted = await requestMicPermission();
+    if (granted) {
+      setAppState(AppState.CAMERA_PERMISSION);
+    } else {
+      alert("마이크 권한이 필요합니다.");
+    }
+  };
+
+  const handleCameraPermission = async () => {
+    const granted = await requestCameraPermission();
+    if (granted) {
+      setAppState(AppState.ONBOARDING_1);
+    } else {
+      alert("카메라 권한이 필요합니다.");
+    }
+  };
+
+  const handleLocationPermission = async () => {
+    const granted = await requestLocationPermission();
+    if (granted) {
+      setAppState(AppState.ONBOARDING_2);
+    } else {
+      alert("위치 권한이 필요합니다.");
+    }
+  };
+
+  useEffect(() => {
+    const initWakeLock = async () => {
+      await requestWakeLock();
+    };
+
+    initWakeLock();
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        initWakeLock();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
 
   const renderMicPermission = () => (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4">
@@ -168,6 +203,39 @@ const App: React.FC = () => {
           </button>
           <button
             onClick={handleMicPermission}
+            className="w-full py-4 bg-[#F0EEE9] rounded-2xl font-bold text-gray-900 active:scale-95 transition-transform"
+          >
+            이번만 허용
+          </button>
+          <button
+            onClick={() => alert("권한이 필요합니다.")}
+            className="w-full py-4 bg-[#F0EEE9] rounded-2xl font-bold text-gray-900 active:scale-95 transition-transform"
+          >
+            허용 안 함
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderCameraPermission = () => (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4">
+      <div className="bg-white w-full max-w-sm rounded-[40px] p-8 flex flex-col items-center shadow-2xl animate-slide-up">
+        <Camera size={48} className="mb-6 text-black" />
+        <p className="text-center font-bold mb-10 text-gray-800 text-lg leading-snug">
+          AIRA에서 사진과 동영상을
+          <br />
+          촬영하도록 허용하시겠습니까?
+        </p>
+        <div className="w-full flex flex-col gap-3">
+          <button
+            onClick={handleCameraPermission}
+            className="w-full py-4 bg-[#F0EEE9] rounded-2xl font-bold text-gray-900 active:scale-95 transition-transform"
+          >
+            앱 사용 중에만 허용
+          </button>
+          <button
+            onClick={handleCameraPermission}
             className="w-full py-4 bg-[#F0EEE9] rounded-2xl font-bold text-gray-900 active:scale-95 transition-transform"
           >
             이번만 허용
@@ -628,6 +696,14 @@ const App: React.FC = () => {
             <Header onMenuClick={() => { }} currentScreen={appState} />
             {renderHome()}
             {renderMicPermission()}
+          </>
+        );
+      case AppState.CAMERA_PERMISSION:
+        return (
+          <>
+            <Header onMenuClick={() => { }} currentScreen={appState} />
+            {renderHome()}
+            {renderCameraPermission()}
           </>
         );
       case AppState.ONBOARDING_1:

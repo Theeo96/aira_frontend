@@ -11,6 +11,7 @@ export interface ChatMessage {
 export enum AppState {
   SPLASH = "SPLASH",
   PERMISSION = "PERMISSION",
+  CAMERA_PERMISSION = "CAMERA_PERMISSION",
   ONBOARDING_1 = "ONBOARDING_1",
   ONBOARDING_2 = "ONBOARDING_2",
   HOME = "HOME",
