@@ -56,10 +56,10 @@ Reason: No matching Static Web App was found or the api key was invalid.
 워크플로우는 다음 단계를 수행합니다:
 
 1. 코드 체크아웃
-2. OIDC 토큰 획득 (Azure 인증용)
+2. OIDC 토큰 획득 (GitHub Actions에서 Azure 간 인증용)
 3. `npm ci` - 의존성 설치
 4. `npm run build` - Vite로 애플리케이션 빌드 (환경변수 포함)
-5. Azure Static Web Apps에 배포 - `/dist` 디렉토리의 빌드된 파일 업로드
+5. Azure Static Web Apps에 배포 - API 토큰과 OIDC 토큰을 함께 사용하여 `/dist` 디렉토리의 빌드된 파일 업로드
 
 ## 환경 변수
 
@@ -68,7 +68,7 @@ Reason: No matching Static Web App was found or the api key was invalid.
 
 ## 주의사항
 
-- Fork한 리포지토리의 원본 API 토큰은 사용할 수 없습니다
+- Fork 한 리포지토리의 원본 API 토큰은 사용할 수 없습니다
 - 각 Azure Static Web App은 고유한 배포 토큰을 가집니다
 - 토큰은 절대 코드에 하드코딩하지 마세요 (항상 GitHub Secrets 사용)
 - PR이 닫힐 때도 Azure Static Web Apps에 알림이 가도록 `close_pull_request_job`이 설정되어 있습니다
