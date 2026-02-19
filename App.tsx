@@ -134,9 +134,13 @@ const App: React.FC = () => {
   };
 
   const renderSplash = () => (
-    <div className="h-screen w-full flex items-center justify-center bg-[#F0EEE9]">
-      <div className="w-32 h-32 bg-[#D9D9D9] rounded-full flex items-center justify-center shadow-md">
-        <span className="text-xl font-bold">AIRA</span>
+    <div className="h-screen w-full flex items-center justify-center bg-[#FDFBF7]">
+      <div className="w-48 h-48 flex items-center justify-center">
+        <img
+          src="/aira-logo.png"
+          alt="AIRA Logo"
+          className="w-full h-full object-contain animate-pulse"
+        />
       </div>
     </div>
   );
@@ -234,9 +238,9 @@ const App: React.FC = () => {
   );
 
   const renderHome = () => (
-    <div className="flex flex-col h-full pt-20 pb-10 px-6">
+    <div className="flex flex-col h-full pb-10">
       {/* Main Display Card */}
-      <div className="flex-1 w-full bg-white rounded-[40px] shadow-sm relative overflow-hidden flex flex-col items-center pt-24">
+      <div className="flex-1 w-full bg-white rounded-b-[40px] shadow-sm relative overflow-hidden flex flex-col items-center pt-60">
         {/* Text Content */}
         <h2 className="text-3xl font-bold text-center leading-tight text-gray-900 z-10 px-6">
           {activeMessage || (
@@ -250,7 +254,7 @@ const App: React.FC = () => {
 
         {/* Aurora Effect Container */}
         <div
-          className={`aurora-container absolute bottom-0 inset-x-0 h-[50%] transition-opacity duration-500 ${isListening ? "opacity-100" : "opacity-80"}`}
+          className={`aurora-container absolute bottom-0 inset-x-0 h-full transition-opacity duration-500 ${isListening ? "opacity-100" : "opacity-80"}`}
         >
           {activePersonas.includes("lumi") && (
             <div
