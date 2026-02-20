@@ -30,7 +30,9 @@ export const Header: React.FC<HeaderProps> = ({
   ].includes(currentScreen);
 
   return (
-    <div className="fixed top-0 left-0 w-full h-16 flex items-center justify-between px-6 z-40 bg-[#F0EEE9]/80 backdrop-blur-sm">
+    // Temporary Change: Match HomePage background (White)
+    // Original: bg-[#F0EEE9]/80
+    <div className="fixed top-0 left-0 w-full h-16 flex items-center justify-between px-6 z-40 bg-white/80 backdrop-blur-sm">
       <div className="flex items-center w-12">
         {isSubPage ? (
           <button onClick={goBack} className="p-2 -ml-2">
