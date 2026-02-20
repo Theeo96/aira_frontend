@@ -129,6 +129,11 @@ const App: React.FC = () => {
     alert("카메라를 이용하시려면 권한이 필요합니다.");
   };
 
+  const handleLogin = () => {
+    // In real app, we might fetch user profile here
+    setAppState(AppState.HOME);
+  };
+
   useEffect(() => {
     const initWakeLock = async () => {
       await requestWakeLock();
@@ -259,7 +264,7 @@ const App: React.FC = () => {
           onCameraClick={handleCameraClick}
         />;
       case AppState.LOGIN:
-        return <LoginPage />;
+        return <LoginPage onLogin={handleLogin} />;
       case AppState.CHAT_FILE:
         return <ChatFilePage
           setAppState={setAppState}

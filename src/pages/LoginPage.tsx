@@ -1,51 +1,53 @@
 import React from "react";
 
-const LoginPage: React.FC = () => {
+interface LoginPageProps {
+    onLogin: () => void;
+}
+
+const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
+    const handleGoogleLogin = async () => {
+        // Mock Backend API Call
+        // In a real app, this would be: await authService.loginWithGoogle();
+        console.log("Attempting Google Login...");
+
+        setTimeout(() => {
+            console.log("Google Login Successful");
+            onLogin();
+        }, 1000); // Simulate network delay
+    };
+
     return (
-        <div className="h-full bg-[#F0EEE9] pt-28 px-8 flex flex-col items-center">
-            <h3 className="text-2xl font-black text-center mb-4 text-gray-900 tracking-tight leading-snug">
-                상주형 AI 컴패니언 서비스가
-                <br />
-                필요하다면
-            </h3>
-            <p className="text-gray-600 text-center text-sm mb-16 leading-relaxed">
-                회원가입/로그인을 위해 이메일을 입력해주세요.
-                <br />
-                인증 메일을 보내드리겠습니다.
-            </p>
+        <div className="h-full bg-white flex flex-col items-center justify-center px-8 pb-32">
+            <div className="w-full max-w-sm flex flex-col items-center">
+                <h3 className="text-3xl font-black text-center mb-6 text-gray-900 tracking-tight leading-snug">
+                    AI 컴패니언<br />
+                    <span className="text-blue-600">AIRA</span>와 함께하세요
+                </h3>
 
-            <button className="w-full bg-white border border-gray-200 py-4 rounded-xl shadow-sm flex items-center justify-center gap-3 mb-10">
-                <img
-                    src="https://www.google.com/favicon.ico"
-                    className="w-5 h-5"
-                    alt="Google"
-                />
-                <span className="font-medium text-gray-700">
-                    Google 계정으로 로그인 하기
-                </span>
-            </button>
+                <p className="text-gray-500 text-center text-sm mb-16 leading-relaxed">
+                    로그인하여 대화를 시작하고<br />
+                    나만의 AI 비서를 만나보세요.
+                </p>
 
-            <div className="w-full flex items-center gap-4 mb-10">
-                <div className="flex-1 h-[1px] bg-gray-300"></div>
-                <span className="text-xs text-gray-400 font-bold">or</span>
-                <div className="flex-1 h-[1px] bg-gray-300"></div>
+                <button
+                    onClick={handleGoogleLogin}
+                    className="w-full bg-white border border-gray-200 py-4 rounded-xl shadow-sm flex items-center justify-center gap-3 active:scale-95 transition-transform hover:bg-gray-50"
+                >
+                    <img
+                        src="https://www.google.com/favicon.ico"
+                        className="w-5 h-5"
+                        alt="Google"
+                    />
+                    <span className="font-medium text-gray-700">
+                        Google 계정으로 로그인
+                    </span>
+                </button>
+
+                <p className="text-[11px] text-gray-400 text-center mt-8 leading-relaxed">
+                    로그인 시 이용 약관 및<br />
+                    개인정보 처리방침에 동의하게 됩니다.
+                </p>
             </div>
-
-            <input
-                type="email"
-                placeholder="email@domain.com"
-                className="w-full py-5 px-6 rounded-xl border border-gray-200 mb-6 bg-white outline-none text-lg text-center"
-            />
-
-            <button className="w-full py-5 bg-black text-white rounded-xl font-bold text-lg mb-10">
-                계속하기
-            </button>
-
-            <p className="text-[11px] text-gray-500 text-center leading-relaxed">
-                '계속하기'를 누르시면 이용 정책에 동의하시고
-                <br />
-                개인정보 처리방침을 확인했음에 동의하시는 것입니다.
-            </p>
         </div>
     );
 };
