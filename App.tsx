@@ -74,7 +74,7 @@ const App: React.FC = () => {
     if (granted) {
       setAppState(AppState.CAMERA_PERMISSION);
     } else {
-      alert("마이크 권한은 필수입니다.");
+      alert("마이크 권한이 차단되었습니다.\n\n브라우저 주소 표시줄의 자물쇠/설정 아이콘을 눌러\n마이크 권한을 '허용' 또는 '재설정' 해주세요.");
     }
   };
 
@@ -173,7 +173,7 @@ const App: React.FC = () => {
             />
             <MicPermissionPage
               onPermissionGrant={handleMicPermission}
-              onPermissionDeny={() => alert("마이크 권한은 필수입니다.")}
+              onPermissionDeny={() => alert("마이크 권한이 차단되었습니다.\n\n브라우저 주소 표시줄의 자물쇠/설정 아이콘을 눌러\n마이크 권한을 '허용' 또는 '재설정' 해주세요.")}
             />
           </>
         );
@@ -297,7 +297,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-[#F0EEE9] shadow-2xl">
+    <div className="relative h-[100dvh] w-full overflow-hidden bg-[#F0EEE9] shadow-2xl">
       {/* Background decoration for Home */}
       {(appState === AppState.HOME || appState === AppState.PERMISSION || appState === AppState.CAMERA_PERMISSION || appState === AppState.ONBOARDING_1 || appState === AppState.ONBOARDING_2) && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-white/30 blur-[100px] rounded-full -z-10"></div>

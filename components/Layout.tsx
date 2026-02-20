@@ -122,6 +122,7 @@ export const Drawer: React.FC<DrawerProps> = ({
                 <Clock size={32} />
               </button>
 
+              {/* Temporary Hide: Schedule and Email Management
               <button
                 onClick={() => onNavigate(AppState.SCHEDULE)}
                 className="w-full flex items-center justify-between py-6 border-b border-gray-100 px-2"
@@ -137,6 +138,7 @@ export const Drawer: React.FC<DrawerProps> = ({
                 <span className="text-3xl font-medium">이메일 관리</span>
                 <Mail size={32} />
               </button>
+              */}
             </div>
           </nav>
 
