@@ -78,15 +78,23 @@ const App: React.FC = () => {
     }
   };
 
-  const handleOnboardingCamera = async () => {
+  const handleOnboardingCameraGrant = async () => {
     await requestCameraPermission();
-    // Proceed regardless of result
     setAppState(AppState.ONBOARDING_1);
   };
 
-  const handleOnboardingLocation = async () => {
+  const handleOnboardingCameraDeny = () => {
+    // Skip permission request, just move next
+    setAppState(AppState.ONBOARDING_1);
+  };
+
+  const handleOnboardingLocationGrant = async () => {
     await requestLocationPermission();
-    // Proceed regardless of result
+    setAppState(AppState.ONBOARDING_2);
+  };
+
+  const handleOnboardingLocationDeny = () => {
+    // Skip permission request, just move next
     setAppState(AppState.ONBOARDING_2);
   };
 
@@ -180,8 +188,8 @@ const App: React.FC = () => {
               onCameraClick={handleCameraClick}
             />
             <CameraPermissionPage
-              onPermissionGrant={isOnboarding ? handleOnboardingCamera : handleRetryCameraGrant}
-              onPermissionDeny={isOnboarding ? handleOnboardingCamera : handleRetryCameraDeny}
+              onPermissionGrant={isOnboarding ? handleOnboardingCameraGrant : handleRetryCameraGrant}
+              onPermissionDeny={isOnboarding ? handleOnboardingCameraDeny : handleRetryCameraDeny}
             />
           </>
         );
@@ -200,8 +208,8 @@ const App: React.FC = () => {
               onCameraClick={handleCameraClick}
             />
             <LocationPermissionPage
-              onPermissionGrant={handleOnboardingLocation}
-              onPermissionDeny={handleOnboardingLocation}
+              onPermissionGrant={handleOnboardingLocationGrant}
+              onPermissionDeny={handleOnboardingLocationDeny}
             />
           </>
         );

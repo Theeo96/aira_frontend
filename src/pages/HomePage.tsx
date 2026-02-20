@@ -47,19 +47,23 @@ const HomePage: React.FC<HomePageProps> = ({
                             // [Option 1: Height-based Circle (Original)]
                             // width: "60vh", height: "60vh", bottom: "-15vh", left: "-15vh",
 
-                            // [Option 2: Width-based Circle (Previous)]
+                            // [Option 2: Width-based Circle]
                             // width: "70vw", height: "70vw", bottom: "-10vw", left: "-10vw",
 
-                            // [Option 3: Ellipse (Current)]
-                            // Width scales with screen width (vw), Height scales with screen height (vh)
-                            // This allows the orb to stretch wide on wide screens without growing too tall
+                            // [Option 3: Ellipse with Proportional Overlap]
+                            // width: "80vw", height: "50vh", bottom: "-15vh", left: "-15vw",
+
+                            // [Option 4: Ellipse with Constant Overlap (~150px)]
+                            // Goal: Overlap 150px centered at 50vw.
+                            // Center of overlap = 50vw.
+                            // Left Orb Right Edge = 50vw + 75px. 
+                            // Left Position = Edge - Width = (50vw + 75px) - 80vw = calc(75px - 30vw)
                             width: "80vw",
                             height: "50vh",
                             bottom: "-15vh",
-                            left: "-15vw",
+                            left: "calc(75px - 30vw)",
 
                             // Animation is handled by .aurora-orb class in index.css
-                            // (keyframes aurora-float: translate & scale)
                             zIndex: 0
                         }}
                     />
@@ -75,14 +79,22 @@ const HomePage: React.FC<HomePageProps> = ({
                             // [Option 1: Height-based Circle (Original)]
                             // width: "60vh", height: "60vh", bottom: "-15vh", right: "-15vh",
 
-                            // [Option 2: Width-based Circle (Previous)]
+                            // [Option 2: Width-based Circle]
                             // width: "70vw", height: "70vw", bottom: "-10vw", right: "-10vw",
 
-                            // [Option 3: Ellipse (Current)]
+                            // [Option 3: Ellipse with Proportional Overlap]
+                            // width: "80vw", height: "50vh", bottom: "-15vh", right: "-15vw",
+
+                            // [Option 4: Ellipse with Constant Overlap (~150px)]
+                            // Similar logic for Right Orb (positioned from right)
+                            // Right Orb Left Edge = 50vw - 75px.
+                            // Right Position (distance from right edge of screen) = 100vw - (Right Orb Right Edge)
+                            // Right Orb Right Edge = Left Edge + Width = (50vw - 75px) + 80vw = 130vw - 75px.
+                            // Right = 100vw - (130vw - 75px) = 100vw - 130vw + 75px = -30vw + 75px = calc(75px - 30vw).
                             width: "80vw",
                             height: "50vh",
                             bottom: "-15vh",
-                            right: "-15vw",
+                            right: "calc(75px - 30vw)",
 
                             animationDelay: "2s",
                             zIndex: 0
