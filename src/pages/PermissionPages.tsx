@@ -6,7 +6,7 @@ export interface PermissionPageProps {
     onPermissionDeny: () => void;
 }
 
-export const MicPermissionPage: React.FC<PermissionPageProps> = ({ onPermissionGrant }) => (
+export const MicPermissionPage: React.FC<PermissionPageProps> = ({ onPermissionGrant, onPermissionDeny }) => (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4">
         <div className="bg-white w-full max-w-sm rounded-[40px] p-8 flex flex-col items-center shadow-2xl animate-slide-up">
             <Mic size={48} className="mb-6 text-black" />
@@ -29,7 +29,7 @@ export const MicPermissionPage: React.FC<PermissionPageProps> = ({ onPermissionG
                     이번만 허용
                 </button>
                 <button
-                    onClick={() => alert("마이크 권한은 필수입니다.")}
+                    onClick={onPermissionDeny}
                     className="w-full py-4 bg-[#F0EEE9] rounded-2xl font-bold text-gray-900 active:scale-95 transition-transform"
                 >
                     허용 안 함
