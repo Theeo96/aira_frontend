@@ -1,4 +1,11 @@
-export type Persona = "lumi" | "rami";
+export type Persona = "rumi" | "lami";
+
+export type GradientTheme = 'aira' | 'sunset' | 'midnight';
+export type GradientSpeed = 'slow' | 'normal' | 'fast';
+export type GradientOpacity = 'light' | 'normal' | 'bold';
+export type GradientDirection = 'bottom' | 'side' | 'center';
+export type StartSoundOption = 'off' | '1' | '2' | '3' | '4';
+export type EnableUISound = boolean;
 
 export interface ChatMessage {
   id: string;
@@ -22,4 +29,7 @@ export enum AppState {
   EMAIL = "EMAIL",
   SCHEDULE = "SCHEDULE",
   KEYBOARD = "KEYBOARD",
+  MATERIAL = "MATERIAL",
+  SETTINGS = "SETTINGS",
+  BRAND_STORY = "BRAND_STORY",
 }

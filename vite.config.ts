@@ -2,6 +2,7 @@ import path from "path";
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import basicSsl from "@vitejs/plugin-basic-ssl";
 
 import { VitePWA } from "vite-plugin-pwa";
 
@@ -13,6 +14,7 @@ export default defineConfig(({ mode }) => {
       host: "0.0.0.0",
     },
     plugins: [
+      basicSsl(),
       react(),
       tailwindcss(),
       VitePWA({
