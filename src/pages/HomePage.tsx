@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Mic, MicOff, Keyboard, Camera, MonitorUp, ArrowRight, X, AudioLines } from "lucide-react";
+﻿import React, { useEffect, useRef, useState } from "react";
+import { Mic, MicOff, Keyboard, Camera, CameraOff, MonitorUp, ArrowRight, X, AudioLines, RefreshCcw } from "lucide-react";
 import { Persona, GradientTheme, GradientSpeed, GradientOpacity, GradientDirection } from "../../types";
 import AiraPocket from "../components/AiraPocket";
 import PlaylistRecommendationDisplay from "../components/PlaylistRecommendationDisplay";
@@ -9,11 +9,15 @@ interface HomePageProps {
     activeMessage: string;
     activePersona: Persona;
     isListening: boolean;
+    isCameraOn?: boolean;
+    cameraStream?: MediaStream | null;
+    cameraError?: string;
     inputText: string;
     setInputText: (text: string) => void;
     onSend: () => void;
     onMicToggle: () => void;
     onCameraClick: () => void;
+    onSwitchCamera?: () => void;
     onScreenShareClick: () => void;
     onNavigateToUpload?: () => void;
     theme?: GradientTheme;
@@ -26,11 +30,15 @@ const HomePage: React.FC<HomePageProps> = ({
     activeMessage,
     activePersona,
     isListening,
+    isCameraOn = false,
+    cameraStream = null,
+    cameraError = "",
     inputText,
     setInputText,
     onSend,
     onMicToggle,
     onCameraClick,
+    onSwitchCamera,
     onScreenShareClick,
     onNavigateToUpload,
     theme = 'aira',
@@ -41,7 +49,32 @@ const HomePage: React.FC<HomePageProps> = ({
     const [showInput, setShowInput] = useState(false);
     const [isPocketOpen, setIsPocketOpen] = useState(false);
     const [touchStartY, setTouchStartY] = useState(0);
+    const videoRef = useRef<HTMLVideoElement | null>(null);
     const { introQuote, listeningQuote, showListeningQuote } = useHomeIntroContent();
+    const isScreenShareSupported =
+        typeof window !== "undefined" &&
+        window.isSecureContext &&
+        typeof navigator !== "undefined" &&
+        !!navigator.mediaDevices &&
+        typeof navigator.mediaDevices.getDisplayMedia === "function";
+
+    useEffect(() => {
+        const videoElement = videoRef.current;
+        if (!videoElement) {
+            return;
+        }
+
+        if (cameraStream) {
+            videoElement.srcObject = cameraStream;
+            const playPromise = videoElement.play();
+            if (playPromise && typeof playPromise.catch === "function") {
+                playPromise.catch(() => undefined);
+            }
+            return;
+        }
+
+        videoElement.srcObject = null;
+    }, [cameraStream]);
 
     const handleTouchStart = (e: React.TouchEvent) => {
         setTouchStartY(e.touches[0].clientY);
@@ -58,6 +91,16 @@ const HomePage: React.FC<HomePageProps> = ({
         if (e.deltaY > 30) {
             onNavigateToUpload?.();
         }
+    };
+
+    const handleScreenShareButtonClick = () => {
+        if (isScreenShareSupported) {
+            onScreenShareClick();
+            return;
+        }
+
+        alert("이 환경에서는 화면 공유가 지원되지 않습니다. 파일 업로드로 대신 진행해주세요.");
+        onNavigateToUpload?.();
     };
 
     // Get dynamic styles based on props
@@ -285,58 +328,90 @@ const HomePage: React.FC<HomePageProps> = ({
             </div>
 
             {/* [Center Message Area] 중앙 메시지 영역 (z-10) */}
-            <div className="flex-1 flex flex-col items-center justify-center relative z-10 px-6 pt-[56px] pb-[88px]">
-                <div
-                    className="text-[24px] md:text-[28px] font-semibold text-[#222222] text-center leading-[1.6] max-w-[320px] sm:max-w-[500px] transition-all duration-500 tracking-tight"
-                >
-                    {activeMessage ? (
-                        <h2 className="quote-font break-keep drop-shadow-md text-[#111111]">
-                            {activeMessage}
-                        </h2>
-                    ) : showListeningQuote ? (
-                        <div className="flex flex-col items-center justify-center gap-4 w-full">
-                            <AudioLines
-                                size={32}
-                                className={`animate-pulse ${activePersona === 'rumi'
-                                    ? 'text-[#E65C00]'
-                                    : 'text-[#005C97]'
-                                    } filter drop-shadow-[0_2px_12px_rgba(255,255,255,0.9)]`}
+            <div className={`flex-1 flex flex-col items-center justify-center relative z-10 px-4 sm:px-6 ${isCameraOn ? "pt-[84px] pb-[104px] md:pt-[72px] md:pb-[108px]" : "pt-[56px] pb-[96px]"}`}>
+                {isCameraOn ? (
+                    <div className="relative h-full w-full flex items-center justify-center">
+                        <div className="relative h-full w-full overflow-hidden rounded-2xl border border-white/50 bg-black shadow-[0_16px_40px_rgba(0,0,0,0.25)] md:h-[86%] md:max-h-[680px] md:w-[88%] md:max-w-[980px] md:rounded-[28px]">
+                            <video
+                                ref={videoRef}
+                                autoPlay
+                                playsInline
+                                muted
+                                className="h-full w-full object-cover"
                             />
-                            <h2
-                                className={`quote-font break-keep whitespace-pre-line text-center leading-[1.6] tracking-tight font-bold text-[24px] md:text-[28px] max-w-[90%] md:max-w-full
-                                bg-clip-text text-transparent
-                                ${activePersona === 'rumi'
-                                        ? 'bg-gradient-to-r from-[#E65C00] to-[#F9A826]'
-                                        : 'bg-gradient-to-r from-[#005C97] to-[#363795]'}
-                                filter drop-shadow-[0_2px_12px_rgba(255,255,255,0.9)]`}
-                            >
-                                {listeningQuote}
-                            </h2>
+                            <div className="pointer-events-none absolute left-3 top-3 rounded-full bg-black/55 px-2 py-1 text-[11px] font-semibold tracking-wide text-white">
+                                CAMERA PREVIEW
+                            </div>
+                            {onSwitchCamera && (
+                                <button
+                                    type="button"
+                                    onClick={onSwitchCamera}
+                                    className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/45 bg-black/55 text-white transition-colors hover:bg-black/70 active:scale-[0.97]"
+                                    title="카메라 전/후면 전환"
+                                >
+                                    <RefreshCcw size={16} strokeWidth={2} />
+                                </button>
+                            )}
                         </div>
-                    ) : (
-                        <>
-                            {introQuote.playlistTheme && introQuote.playlistSong ? (
-                                <PlaylistRecommendationDisplay
-                                    theme={introQuote.playlistTheme}
-                                    song={introQuote.playlistSong}
+                    </div>
+                ) : (
+                    <div
+                        className="text-[24px] md:text-[28px] font-semibold text-[#222222] text-center leading-[1.6] max-w-[320px] sm:max-w-[500px] transition-all duration-500 tracking-tight"
+                    >
+                        {activeMessage ? (
+                            <h2 className="quote-font break-keep drop-shadow-md text-[#111111]">
+                                {activeMessage}
+                            </h2>
+                        ) : showListeningQuote ? (
+                            <div className="flex flex-col items-center justify-center gap-4 w-full">
+                                <AudioLines
+                                    size={32}
+                                    className={`animate-pulse ${activePersona === 'rumi'
+                                        ? 'text-[#E65C00]'
+                                        : 'text-[#005C97]'
+                                        } filter drop-shadow-[0_2px_12px_rgba(255,255,255,0.9)]`}
                                 />
-                            ) : (
-                                <h2 className="quote-font leading-[1.4] whitespace-pre-line break-keep font-medium drop-shadow-sm text-[#1A1A1A]">
-                                    {introQuote.wrapWithQuotes
-                                        ? `"${introQuote.text}"`
-                                        : introQuote.text}
+                                <h2
+                                    className={`quote-font break-keep whitespace-pre-line text-center leading-[1.6] tracking-tight font-bold text-[24px] md:text-[28px] max-w-[90%] md:max-w-full
+                                    bg-clip-text text-transparent
+                                    ${activePersona === 'rumi'
+                                            ? 'bg-gradient-to-r from-[#E65C00] to-[#F9A826]'
+                                            : 'bg-gradient-to-r from-[#005C97] to-[#363795]'}
+                                    filter drop-shadow-[0_2px_12px_rgba(255,255,255,0.9)]`}
+                                >
+                                    {listeningQuote}
                                 </h2>
-                            )}
-                            {introQuote.author && (
-                                <p className="quote-font mt-4 text-[15px] md:text-[16px] font-medium text-[#555555] block drop-shadow-sm tracking-normal">
-                                    {introQuote.work
-                                        ? `${introQuote.work} | ${introQuote.author}`
-                                        : introQuote.author}
-                                </p>
-                            )}
-                        </>
-                    )}
-                </div>
+                            </div>
+                        ) : (
+                            <>
+                                {introQuote.playlistTheme && introQuote.playlistSong ? (
+                                    <PlaylistRecommendationDisplay
+                                        theme={introQuote.playlistTheme}
+                                        song={introQuote.playlistSong}
+                                    />
+                                ) : (
+                                    <h2 className="quote-font leading-[1.4] whitespace-pre-line break-keep font-medium drop-shadow-sm text-[#1A1A1A]">
+                                        {introQuote.wrapWithQuotes
+                                            ? `"${introQuote.text}"`
+                                            : introQuote.text}
+                                    </h2>
+                                )}
+                                {introQuote.author && (
+                                    <p className="quote-font mt-4 text-[15px] md:text-[16px] font-medium text-[#555555] block drop-shadow-sm tracking-normal">
+                                        {introQuote.work
+                                            ? `${introQuote.work} | ${introQuote.author}`
+                                            : introQuote.author}
+                                    </p>
+                                )}
+                            </>
+                        )}
+                    </div>
+                )}
+                {cameraError && (
+                    <p className="mt-3 rounded-xl border border-[#F6C6C6] bg-[#FFF5F5]/90 px-3 py-2 text-center text-[12px] font-medium text-[#B24141] backdrop-blur-sm">
+                        {cameraError}
+                    </p>
+                )}
             </div>
 
             {/* [Bottom Input Bar & AIRA Pocket] 하단 영역 (z-20) */}
@@ -346,36 +421,44 @@ const HomePage: React.FC<HomePageProps> = ({
 
                 {/* Bottom Input Bar */}
                 {showInput ? (
-                    <div className="relative flex items-center gap-3 px-4 py-3 bg-white/20 backdrop-blur-md h-[88px] transition-all z-30">
-                        <input
-                            autoFocus
-                            type="text"
-                            value={inputText}
-                            onChange={(e) => setInputText(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && onSend()}
-                            placeholder="메시지를 입력하세요..."
-                            className="flex-1 text-[16px] text-[#333333] bg-transparent outline-none placeholder:text-[#333333] placeholder:opacity-60 pl-2 font-medium"
-                        />
-                        <button onClick={onSend} className="w-10 h-10 flex flex-col items-center justify-center bg-[color:var(--color-persona-primary)] text-white rounded-full flex-shrink-0 shadow-[var(--shadow-crisp)]">
-                            <ArrowRight size={20} />
-                        </button>
-                        <button onClick={() => setShowInput(false)} className="w-[36px] h-[36px] flex flex-col items-center justify-center bg-transparent border border-white/40 rounded-full text-[#666666] flex-shrink-0 ml-1 shadow-[var(--shadow-crisp)] backdrop-blur-sm bg-white/50">
-                            <X size={18} />
-                        </button>
+                    <div className="relative flex min-w-0 items-center gap-2 px-3 sm:px-4 py-3 bg-white/20 backdrop-blur-md h-[88px] transition-all z-30 overflow-hidden">
+                        <div className="flex-1 min-w-0">
+                            <input
+                                autoFocus
+                                type="text"
+                                value={inputText}
+                                onChange={(e) => setInputText(e.target.value)}
+                                onKeyDown={(e) => e.key === "Enter" && onSend()}
+                                placeholder="메시지를 입력하세요..."
+                                className="w-full min-w-0 text-[16px] text-[#333333] bg-transparent outline-none placeholder:text-[#333333] placeholder:opacity-60 pl-1.5 font-medium"
+                            />
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                            <button onClick={onSend} className="w-10 h-10 flex flex-col items-center justify-center bg-[color:var(--color-persona-primary)] text-white rounded-full flex-shrink-0 shadow-[var(--shadow-crisp)]">
+                                <ArrowRight size={20} />
+                            </button>
+                            <button onClick={() => setShowInput(false)} className="w-[36px] h-[36px] flex flex-col items-center justify-center bg-transparent border border-white/40 rounded-full text-[#666666] flex-shrink-0 shadow-[var(--shadow-crisp)] backdrop-blur-sm bg-white/50">
+                                <X size={18} />
+                            </button>
+                        </div>
                     </div>
                 ) : (
                     <div className="relative flex flex-col items-center justify-end px-4 h-[104px] z-30 pb-2">
                         <div className="flex items-center justify-center gap-[16px] md:gap-[20px] mb-3">
 
-                            {/* 🖥️ 화면공유 아이콘 */}
+                            {/* 화면공유 아이콘 */}
                             <button
-                                onClick={onScreenShareClick}
-                                className="w-[36px] h-[36px] sm:w-[40px] sm:h-[40px] bg-white/70 backdrop-blur-md rounded-full border border-white/40 shadow-[var(--shadow-crisp)] flex items-center justify-center text-[#666666] hover:bg-[rgba(var(--color-persona-rgb),0.1)] transition-colors"
+                                onClick={handleScreenShareButtonClick}
+                                title={isScreenShareSupported ? "화면 공유" : "이 기기에서는 화면 공유를 지원하지 않습니다"}
+                                className={`w-[36px] h-[36px] sm:w-[40px] sm:h-[40px] backdrop-blur-md rounded-full border shadow-[var(--shadow-crisp)] flex items-center justify-center transition-colors ${isScreenShareSupported
+                                    ? "bg-white/70 border-white/40 text-[#666666] hover:bg-[rgba(var(--color-persona-rgb),0.1)]"
+                                    : "bg-white/55 border-white/30 text-[#9A9A9A]"
+                                    }`}
                             >
                                 <MonitorUp size={20} strokeWidth={1.5} />
                             </button>
 
-                            {/* ⌨️ 키보드 아이콘 */}
+                            {/* 키보드 아이콘 */}
                             <button
                                 onClick={() => setShowInput(true)}
                                 className="w-[36px] h-[36px] sm:w-[40px] sm:h-[40px] bg-white/70 backdrop-blur-md rounded-full border border-white/40 shadow-[var(--shadow-crisp)] flex items-center justify-center text-[#666666] hover:bg-[rgba(var(--color-persona-rgb),0.1)] transition-colors"
@@ -383,15 +466,18 @@ const HomePage: React.FC<HomePageProps> = ({
                                 <Keyboard size={20} strokeWidth={1.5} />
                             </button>
 
-                            {/* 📷 카메라 아이콘 */}
+                            {/* 카메라 아이콘 */}
                             <button
                                 onClick={onCameraClick}
-                                className="w-[36px] h-[36px] sm:w-[40px] sm:h-[40px] bg-white/70 backdrop-blur-md rounded-full border border-white/40 shadow-[var(--shadow-crisp)] flex items-center justify-center text-[#666666] hover:bg-[rgba(var(--color-persona-rgb),0.1)] transition-colors cursor-pointer"
+                                className={`w-[36px] h-[36px] sm:w-[40px] sm:h-[40px] backdrop-blur-md rounded-full border shadow-[var(--shadow-crisp)] flex items-center justify-center transition-all cursor-pointer ${isCameraOn
+                                    ? 'bg-[rgba(var(--color-persona-rgb),0.22)] border-[rgba(var(--color-persona-rgb),0.55)] text-[color:var(--color-persona-primary)] scale-[1.06]'
+                                    : 'bg-white/70 border-white/40 text-[#666666] hover:bg-[rgba(var(--color-persona-rgb),0.1)]'
+                                    }`}
                             >
-                                <Camera size={20} strokeWidth={1.5} />
+                                {isCameraOn ? <Camera size={20} strokeWidth={1.5} /> : <CameraOff size={20} strokeWidth={1.8} />}
                             </button>
 
-                            {/* 🎤 마이크 아이콘 (Primary) */}
+                            {/* 마이크 아이콘 (Primary) */}
                             <button
                                 onClick={onMicToggle}
                                 className={`w-[56px] h-[56px] sm:w-[56px] sm:h-[56px] rounded-full text-white flex items-center justify-center transition-transform ${isListening ? 'scale-[1.05]' : 'hover:scale-[1.05]'}`}
@@ -415,7 +501,7 @@ const HomePage: React.FC<HomePageProps> = ({
 
                         {/* 스와이프 유도 인디케이터 (데스크탑은 클릭 지원) */}
                         <div
-                            className="w-full flex justify-center py-2 cursor-pointer opacity-50 hover:opacity-100 transition-opacity"
+                            className="w-full flex justify-center py-2 cursor-pointer opacity-50 hover:opacity-100 transition-opacity tap-feedback"
                             onClick={onNavigateToUpload}
                         >
                             <div className="w-12 h-1 bg-[#CCCCCC] rounded-full drop-shadow-sm"></div>
@@ -428,3 +514,4 @@ const HomePage: React.FC<HomePageProps> = ({
 };
 
 export default HomePage;
+

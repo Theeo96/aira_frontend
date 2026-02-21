@@ -16,7 +16,7 @@ export default function AiraPocket({ isOpen, onToggle }: AiraPocketProps) {
         >
             {/* Drag Handle Indicator */}
             <div
-                className="w-full h-8 flex items-center justify-center cursor-pointer pt-2 shrink-0"
+                className="w-full h-8 flex items-center justify-center cursor-pointer pt-2 shrink-0 tap-feedback"
                 onClick={onToggle}
             >
                 <div className="w-[40px] h-[4px] bg-[#E0E0E0] rounded-full"></div>

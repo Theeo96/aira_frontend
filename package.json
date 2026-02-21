@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:history": "npm run stamp:graph-scores && node scripts/build-history-from-graph.mjs",
+    "stamp:graph-datetime": "node scripts/stamp-graph-source-datetime.mjs",
+    "stamp:graph-scores": "node scripts/stamp-graph-source-scores-from-seed.mjs",
+    "stamp:graph-persona": "node scripts/stamp-graph-source-persona-replies.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.39.0",

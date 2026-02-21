@@ -58,16 +58,16 @@ export const Header: React.FC<HeaderProps> = ({
         {isSubPage ? (
           <button
             onClick={goBack}
-            className="flex items-center justify-center w-[48px] h-[48px] -ml-2 touch-manipulation"
+            className="flex items-center justify-center w-[48px] h-[48px] -ml-2 touch-manipulation rounded-xl text-[#333333] hover:bg-black/5 active:scale-[0.96] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--persona-rgb),0.45)]"
           >
             <span className="text-2xl font-light text-[#333333]">〈</span>
           </button>
         ) : (
           <button
             onClick={onMenuClick}
-            className="flex items-center justify-center w-[48px] h-[48px] -ml-2 touch-manipulation"
+            className="group flex items-center justify-center w-[48px] h-[48px] -ml-2 touch-manipulation rounded-xl text-[#333333] hover:bg-black/5 active:scale-[0.96] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--persona-rgb),0.45)]"
           >
-            <Menu size={32} color="#333333" />
+            <Menu size={32} className="transition-transform duration-150 group-hover:scale-105" />
           </button>
         )}
       </div>
@@ -152,6 +152,16 @@ export const Drawer: React.FC<DrawerProps> = ({
     }
   };
 
+  const drawerNavButtonClass =
+    "w-full h-[64px] px-5 flex items-center gap-4 text-[#333333] rounded-xl " +
+    "hover:bg-[#EEF2F7] hover:text-[#111827] hover:shadow-[inset_0_0_0_1px_rgba(15,23,42,0.06)] " +
+    "active:bg-[#E2E8F0] active:scale-[0.995] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--persona-rgb),0.45)]";
+
+  const drawerSectionButtonClass =
+    "w-full h-[48px] pl-10 pr-5 flex items-center justify-between text-[#333333] rounded-lg " +
+    "hover:bg-[#F3F4F6] hover:text-[#111827] active:bg-[#E5E7EB] active:scale-[0.995] " +
+    "transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--persona-rgb),0.45)]";
+
   return (
     <div
       className={`fixed inset-0 z-50 transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -183,7 +193,7 @@ export const Drawer: React.FC<DrawerProps> = ({
           {/* 1. 브랜드스토리 */}
           <button
             onClick={() => onNavigate(AppState.BRAND_STORY)}
-            className="w-full h-[64px] px-5 flex items-center gap-4 hover:bg-[rgba(var(--color-persona-rgb),0.05)] transition-colors text-[#333333]"
+            className={drawerNavButtonClass}
           >
             <BookOpen size={24} />
             <div className="text-left flex-1">
@@ -197,7 +207,7 @@ export const Drawer: React.FC<DrawerProps> = ({
           {/* 2. 업로드 (자료+대화) */}
           <button
             onClick={() => onNavigate(AppState.CHAT_FILE)}
-            className="w-full h-[64px] px-5 flex items-center gap-4 hover:bg-[rgba(var(--color-persona-rgb),0.05)] transition-colors text-[#333333]"
+            className={drawerNavButtonClass}
           >
             <FolderOpen size={24} />
             <div className="text-left flex-1">
@@ -213,7 +223,7 @@ export const Drawer: React.FC<DrawerProps> = ({
           {/* 3. 히스토리 */}
           <button
             onClick={() => onNavigate(AppState.HISTORY)}
-            className="w-full h-[64px] px-5 flex items-center gap-4 hover:bg-[rgba(var(--color-persona-rgb),0.05)] transition-colors text-[#333333]"
+            className={drawerNavButtonClass}
           >
             <History size={24} />
             <div className="text-left flex-1">
@@ -231,7 +241,7 @@ export const Drawer: React.FC<DrawerProps> = ({
           {/* 설정 헤더 */}
           <button
             onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-            className="w-full h-[64px] px-5 flex items-center justify-between text-[#333333] font-semibold bg-white border-b border-[#E0E0E0] hover:bg-gray-50 transition-colors"
+            className="w-full h-[64px] px-5 flex items-center justify-between text-[#333333] font-semibold bg-white border-b border-[#E0E0E0] rounded-xl hover:bg-[#F3F4F6] hover:text-[#111827] active:bg-[#E5E7EB] active:scale-[0.995] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--persona-rgb),0.45)]"
           >
             <div className="flex items-center gap-4">
               <Settings size={24} />
@@ -246,7 +256,7 @@ export const Drawer: React.FC<DrawerProps> = ({
 
               {/* 계정 (통합 및 축소) */}
               <div className="border-b border-[#F5F5F5]">
-                <button onClick={() => toggleSetting('account')} className="w-full h-[48px] pl-10 pr-5 flex items-center justify-between text-[#333333] hover:bg-gray-50">
+                <button onClick={() => toggleSetting('account')} className={drawerSectionButtonClass}>
                   <div className="flex items-center gap-3"><UserCircle size={18} /><span>계정</span></div>
                   {expandedSetting === 'account' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                 </button>
@@ -275,7 +285,7 @@ export const Drawer: React.FC<DrawerProps> = ({
 
               {/* 알림 */}
               <div className="border-b border-[#F5F5F5]">
-                <button onClick={() => toggleSetting('notifications')} className="w-full h-[48px] pl-10 pr-5 flex items-center justify-between text-[#333333] hover:bg-gray-50">
+                <button onClick={() => toggleSetting('notifications')} className={drawerSectionButtonClass}>
                   <div className="flex items-center gap-3"><Bell size={18} /><span>알림</span></div>
                   {expandedSetting === 'notifications' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                 </button>
@@ -319,7 +329,7 @@ export const Drawer: React.FC<DrawerProps> = ({
 
               {/* 프라이버시 */}
               <div className="border-b border-[#F5F5F5]">
-                <button onClick={() => toggleSetting('privacy')} className="w-full h-[48px] pl-10 pr-5 flex items-center justify-between text-[#333333] hover:bg-gray-50">
+                <button onClick={() => toggleSetting('privacy')} className={drawerSectionButtonClass}>
                   <div className="flex items-center gap-3"><Lock size={18} /><span>프라이버시</span></div>
                   {expandedSetting === 'privacy' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                 </button>
@@ -340,7 +350,7 @@ export const Drawer: React.FC<DrawerProps> = ({
 
               {/* 텍스트 크기 */}
               <div className="border-b border-[#F5F5F5]">
-                <button onClick={() => toggleSetting('textsize')} className="w-full h-[48px] pl-10 pr-5 flex items-center justify-between text-[#333333] hover:bg-gray-50">
+                <button onClick={() => toggleSetting('textsize')} className={drawerSectionButtonClass}>
                   <div className="flex items-center gap-3"><Type size={18} /><span>텍스트 크기</span></div>
                   {expandedSetting === 'textsize' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                 </button>
@@ -362,7 +372,7 @@ export const Drawer: React.FC<DrawerProps> = ({
 
               {/* 실험실 */}
               <div>
-                <button onClick={() => toggleSetting('lab')} className="w-full h-[48px] pl-10 pr-5 flex items-center justify-between text-[#333333] hover:bg-gray-50">
+                <button onClick={() => toggleSetting('lab')} className={drawerSectionButtonClass}>
                   <div className="flex items-center gap-3"><FlaskConical size={18} /><span>실험실 <span className="text-[10px] bg-red-100 text-red-600 px-1 rounded">NEW</span></span></div>
                   {expandedSetting === 'lab' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                 </button>
