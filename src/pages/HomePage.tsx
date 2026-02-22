@@ -12,6 +12,7 @@ interface HomePageProps {
     isCameraOn?: boolean;
     cameraStream?: MediaStream | null;
     cameraError?: string;
+    isScreenSharing?: boolean;
     inputText: string;
     setInputText: (text: string) => void;
     onSend: () => void;
@@ -33,6 +34,7 @@ const HomePage: React.FC<HomePageProps> = ({
     isCameraOn = false,
     cameraStream = null,
     cameraError = "",
+    isScreenSharing = false,
     inputText,
     setInputText,
     onSend,
@@ -450,9 +452,11 @@ const HomePage: React.FC<HomePageProps> = ({
                             <button
                                 onClick={handleScreenShareButtonClick}
                                 title={isScreenShareSupported ? "화면 공유" : "이 기기에서는 화면 공유를 지원하지 않습니다"}
-                                className={`w-[36px] h-[36px] sm:w-[40px] sm:h-[40px] backdrop-blur-md rounded-full border shadow-[var(--shadow-crisp)] flex items-center justify-center transition-colors ${isScreenShareSupported
-                                    ? "bg-white/70 border-white/40 text-[#666666] hover:bg-[rgba(var(--color-persona-rgb),0.1)]"
-                                    : "bg-white/55 border-white/30 text-[#9A9A9A]"
+                                className={`w-[36px] h-[36px] sm:w-[40px] sm:h-[40px] backdrop-blur-md rounded-full border shadow-[var(--shadow-crisp)] flex items-center justify-center transition-all cursor-pointer ${isScreenSharing
+                                    ? 'bg-[rgba(var(--color-persona-rgb),0.22)] border-[rgba(var(--color-persona-rgb),0.55)] text-[color:var(--color-persona-primary)] scale-[1.06]'
+                                    : isScreenShareSupported
+                                        ? "bg-white/70 border-white/40 text-[#666666] hover:bg-[rgba(var(--color-persona-rgb),0.1)]"
+                                        : "bg-white/55 border-white/30 text-[#9A9A9A]"
                                     }`}
                             >
                                 <MonitorUp size={20} strokeWidth={1.5} />

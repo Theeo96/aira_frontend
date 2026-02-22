@@ -8,7 +8,9 @@ import {
 import { AppState, Persona, ChatMessage, GradientTheme, GradientSpeed, GradientOpacity, GradientDirection, StartSoundOption, EnableUISound } from "./types";
 import { Header, Drawer } from "./components/Layout";
 import { getAIResponse } from "./services/geminiService";
+import { airaSocketService } from "./src/services/airaSocketService";
 import { useEarcon } from "./src/hooks/useEarcon";
+import { useAiraMedia } from "./src/hooks/useAiraMedia";
 
 // Page Imports
 import SplashPage from "./src/pages/SplashPage";
@@ -61,6 +63,9 @@ const App: React.FC = () => {
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState("");
   const [cameraFacingMode, setCameraFacingMode] = useState<"user" | "environment">("user");
+
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [screenStream, setScreenStream] = useState<MediaStream | null>(null);
   const [showMicTestModal, setShowMicTestModal] = useState(false);
   const [hasMicBeenTurnedOff, setHasMicBeenTurnedOff] = useState(false);
   const [hasShownMicTestModal, setHasShownMicTestModal] = useState(false);
@@ -70,6 +75,7 @@ const App: React.FC = () => {
   });
   const [enableUISound, setEnableUISound] = useState<EnableUISound>(true);
   const [enableLabMicTest, setEnableLabMicTest] = useState<boolean>(() => isLabMicTestEnabled());
+  const [userToken, setUserToken] = useState<string | null>(() => localStorage.getItem("aira_user_token"));
 
   // UI Sound Earcons
   const { playSuccess } = useEarcon(enableUISound);
@@ -93,8 +99,9 @@ const App: React.FC = () => {
     let isMounted = true;
 
     const loadHistory = async () => {
+      if (!userToken) return;
       try {
-        const response = await fetch("/historyFromGraph.json", { cache: "no-store" });
+        const response = await fetch(`https://thimblelike-nonopprobrious-lannie.ngrok-free.dev/api/memory?token=${encodeURIComponent(userToken)}`, { cache: "no-store" });
         if (!response.ok) {
           throw new Error(`Failed to load history: ${response.status}`);
         }
@@ -102,7 +109,20 @@ const App: React.FC = () => {
         if (!isMounted) {
           return;
         }
-        setHistory(Array.isArray(payload) ? payload : []);
+        if (payload.ok && Array.isArray(payload.data)) {
+          const mappedHistory = payload.data.map((item: any) => ({
+            id: item.conversation_id,
+            user_id: "unknown",
+            date: item.started_at,
+            full_transcript: item.messages?.map((m: any) => `${m.speaker_type}: ${m.text}`).join('\n') || "",
+            messages: item.messages,
+            memory_details: item.memories,
+            summary: item.summary
+          }));
+          setHistory(mappedHistory);
+        } else {
+          setHistory([]);
+        }
       } catch (error) {
         console.error("Failed to load graph history data", error);
         if (isMounted) {
@@ -111,23 +131,75 @@ const App: React.FC = () => {
       }
     };
 
-    loadHistory();
+    if (userToken) {
+      loadHistory();
+    }
+
     return () => {
       isMounted = false;
+    };
+  }, [userToken]);
+
+  // Handle Token from URL after OAuth Redirect
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const urlToken = searchParams.get("token");
+    const storedToken = localStorage.getItem("aira_user_token");
+
+    const effectiveToken = urlToken || storedToken;
+
+    if (effectiveToken) {
+      if (urlToken) {
+        localStorage.setItem("aira_user_token", urlToken);
+        // Clean up URL
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+      setUserToken(effectiveToken);
+      airaSocketService.initialize(effectiveToken);
+    }
+
+    return () => {
+      // Disconnect socket when app unmounts
+      airaSocketService.disconnect();
     };
   }, []);
 
   useEffect(() => {
     if (appState === AppState.SPLASH) {
-      const nextState = isOnboarding ? AppState.PERMISSION : AppState.HOME;
+      // If userToken is missing, guide to LOGIN instead of HOME
+      const loggedInNextState = isOnboarding ? AppState.PERMISSION : AppState.HOME;
+      const nextState = userToken ? loggedInNextState : AppState.LOGIN;
       const timer = window.setTimeout(() => setAppState(nextState), 2000);
       return () => window.clearTimeout(timer);
     }
-  }, [appState, isOnboarding]);
+  }, [appState, isOnboarding, userToken]);
 
   useEffect(() => {
     localStorage.setItem('startSoundOption', startSoundOption);
   }, [startSoundOption]);
+
+  // Handle WebSocket Media Connection globally
+  useAiraMedia(
+    isListening,
+    isCameraOn,
+    cameraStream,
+    isScreenSharing,
+    screenStream,
+    (transcriptObj) => {
+      // transcriptObj => { type: "transcript", role: "user" | "lumi" | "rami", text: "..." }
+      if (transcriptObj && transcriptObj.text) {
+        setActiveMessage(transcriptObj.text);
+
+        // 화자 라우팅 처리: "lumi" -> "lami" (프론트엔드 명칭 고려)
+        if (transcriptObj.role === "lumi" || transcriptObj.role === "lami") {
+          setActivePersona("lami");
+        } else if (transcriptObj.role === "rami" || transcriptObj.role === "rumi") {
+          setActivePersona("rumi");
+        }
+      }
+    }
+  );
 
   useEffect(() => {
     try {
@@ -140,15 +212,13 @@ const App: React.FC = () => {
   const handleSend = async () => {
     if (!inputText.trim()) return;
     const msg = inputText;
-    // Keep inputText or clear it? Usually clear it.
     setInputText("");
-    setIsListening(false);
 
-    setActiveMessage("...");
-    const aiResp = await getAIResponse(msg, [activePersona]);
-    setActiveMessage(aiResp);
+    // 이전에 호출하던 getAIResponse() 대신 Socket으로 전송
+    airaSocketService.sendTextInput(msg);
 
-    // Toggle persona output if speaker mode is 'both'
+    // Toggle persona output if speaker mode is 'both' -- 
+    // WebSocket을 통할 경우 역할은 백엔드 응답(role)에 따라 동적으로 바뀌지만, 임시 토글 유지
     if (speakerMode === "both") {
       setActivePersona(prev => (prev === "rumi" ? "lami" : "rumi"));
     }
@@ -295,14 +365,31 @@ const App: React.FC = () => {
 
   const handleScreenShareClick = async () => {
     try {
-      // Trigger actual browser screen sharing prompt
-      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-      // If user approves, we get the stream
-      playSuccess();
-      setActiveMessage("화면을 확인하고 있습니다.");
+      if (isScreenSharing) {
+        // Stop sharing
+        if (screenStream) {
+          screenStream.getTracks().forEach((track) => track.stop());
+        }
+        setScreenStream(null);
+        setIsScreenSharing(false);
+        setActiveMessage("화면 공유가 종료되었습니다.");
+        return;
+      }
 
-      // Stop the stream right away since this is just a dummy visual effect
-      stream.getTracks().forEach(track => track.stop());
+      // Start sharing
+      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+      setScreenStream(stream);
+      setIsScreenSharing(true);
+      playSuccess();
+      setActiveMessage("화면을 기반으로 대화 중입니다.");
+
+      // When user clicks the "Stop sharing" button built into Chrome/Edge at the bottom
+      stream.getVideoTracks()[0].onended = () => {
+        setScreenStream(null);
+        setIsScreenSharing(false);
+        setActiveMessage("화면 공유가 종료되었습니다.");
+      };
+
     } catch (err) {
       console.log("Screen share cancelled or failed.", err);
     }
@@ -334,6 +421,9 @@ const App: React.FC = () => {
   useEffect(() => {
     return () => {
       stopCameraPreview();
+      if (screenStream) {
+        screenStream.getTracks().forEach(track => track.stop());
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -372,6 +462,7 @@ const App: React.FC = () => {
               onCameraClick={handleCameraToggle}
               onSwitchCamera={handleSwitchCamera}
               onScreenShareClick={handleScreenShareClick}
+              isScreenSharing={isScreenSharing}
               onNavigateToUpload={() => setAppState(AppState.CHAT_FILE)}
               isCameraOn={isCameraOn}
               cameraStream={cameraStream}
@@ -399,6 +490,7 @@ const App: React.FC = () => {
               onCameraClick={handleCameraToggle}
               onSwitchCamera={handleSwitchCamera}
               onScreenShareClick={handleScreenShareClick}
+              isScreenSharing={isScreenSharing}
               onNavigateToUpload={() => setAppState(AppState.CHAT_FILE)}
               isCameraOn={isCameraOn}
               cameraStream={cameraStream}
@@ -429,6 +521,7 @@ const App: React.FC = () => {
               onCameraClick={handleCameraToggle}
               onSwitchCamera={handleSwitchCamera}
               onScreenShareClick={handleScreenShareClick}
+              isScreenSharing={isScreenSharing}
               onNavigateToUpload={() => setAppState(AppState.CHAT_FILE)}
               isCameraOn={isCameraOn}
               cameraStream={cameraStream}
@@ -458,6 +551,7 @@ const App: React.FC = () => {
               onCameraClick={handleCameraToggle}
               onSwitchCamera={handleSwitchCamera}
               onScreenShareClick={handleScreenShareClick}
+              isScreenSharing={isScreenSharing}
               onNavigateToUpload={() => setAppState(AppState.CHAT_FILE)}
               isCameraOn={isCameraOn}
               cameraStream={cameraStream}
@@ -485,6 +579,7 @@ const App: React.FC = () => {
               onCameraClick={handleCameraToggle}
               onSwitchCamera={handleSwitchCamera}
               onScreenShareClick={handleScreenShareClick}
+              isScreenSharing={isScreenSharing}
               onNavigateToUpload={() => setAppState(AppState.CHAT_FILE)}
               isCameraOn={isCameraOn}
               cameraStream={cameraStream}

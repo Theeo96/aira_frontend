@@ -5,15 +5,10 @@ interface LoginPageProps {
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
-    const handleGoogleLogin = async () => {
-        // Mock Backend API Call
-        // In a real app, this would be: await authService.loginWithGoogle();
-        console.log("Attempting Google Login...");
-
-        setTimeout(() => {
-            console.log("Google Login Successful");
-            onLogin();
-        }, 1000); // Simulate network delay
+    const handleGoogleLogin = () => {
+        const backendLoginUrl = "https://thimblelike-nonopprobrious-lannie.ngrok-free.dev/login";
+        const redirectTarget = window.location.origin;
+        window.location.href = `${backendLoginUrl}?redirect_target=${encodeURIComponent(redirectTarget)}`;
     };
 
     return (
