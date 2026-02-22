@@ -310,3 +310,50 @@
   border-bottom-right-radius: 10px;
   z-index: 1;
 }
+
+@layer base {
+  button,
+  [role="button"],
+  input[type="button"],
+  input[type="submit"] {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  input[type="button"]:not(:disabled),
+  input[type="submit"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  input[type="button"]:focus-visible,
+  input[type="submit"]:focus-visible {
+    outline: 2px solid rgba(var(--persona-rgb), 0.5);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .tap-feedback {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition:
+      transform 140ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      filter 160ms ease,
+      opacity 160ms ease,
+      background-color 160ms ease;
+  }
+
+  .tap-feedback:active {
+    transform: scale(0.988);
+  }
+
+  @media (hover: hover) {
+    .tap-feedback:hover {
+      filter: brightness(0.98);
+    }
+  }
+}
