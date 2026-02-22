@@ -25,3 +25,6 @@ dist-ssr
 
 # Work logs
 works.txt
+
+# Local large graph dataset workspace
+graph2-0220/

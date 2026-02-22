@@ -1491,6 +1491,50 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ historyData, viewMode, setVie
 
                             <aside className={`rounded-2xl border p-4 ${panelClass}`}>
                                 <div className="max-h-[560px] overflow-y-auto space-y-4">
+                                    <section className={`rounded-xl border p-3 ${isDark ? "border-slate-600 bg-slate-800/60" : "border-slate-200 bg-white"}`}>
+                                        {!graphView.selectedNode && (
+                                            <p className={`text-sm leading-6 ${isDark ? "text-slate-300" : "text-slate-500"}`}>
+                                                노드를 선택하면 상세 정보를 볼 수 있습니다.
+                                            </p>
+                                        )}
+                                        {graphView.selectedNode && (
+                                            <div className="space-y-3">
+                                                {selectedGraphHistoryId && (
+                                                    <button
+                                                        type="button"
+                                                        className={`rounded-md px-2 py-1 text-xs font-semibold ${isDark ? "bg-sky-600 text-white hover:bg-sky-500" : "bg-sky-100 text-sky-800 border border-sky-200 hover:bg-sky-200"}`}
+                                                        onClick={() => {
+                                                            setSelectedId(selectedGraphHistoryId);
+                                                            setViewMode("list");
+                                                        }}
+                                                    >
+                                                        히스토리에서 보기
+                                                    </button>
+                                                )}
+                                                <div>
+                                                    <p className="text-xs text-slate-400">노드 유형</p>
+                                                    <p className="text-sm font-semibold">{graphView.selectedNode.type ?? "unknown"}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs text-slate-400">라벨</p>
+                                                    <p className="text-sm font-semibold break-words">{graphView.selectedNode.label ?? graphView.selectedNode.key}</p>
+                                                </div>
+                                                {graphView.selectedNode.ts && (
+                                                    <div>
+                                                        <p className="text-xs text-slate-400">시각</p>
+                                                        <p className="text-sm">{graphView.selectedNode.ts}</p>
+                                                    </div>
+                                                )}
+                                                {graphView.selectedNode.full_text && (
+                                                    <div>
+                                                        <p className="text-xs text-slate-400">원문</p>
+                                                        <p className="text-sm leading-6 whitespace-pre-wrap break-words max-h-[260px] overflow-y-auto">{graphView.selectedNode.full_text}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </section>
+
                                     <section>
                                         <p className={`text-xs font-semibold ${isDark ? "text-slate-300" : "text-slate-500"}`}>
                                             변화 알림 (최근 {recentDays}일 vs 이전 {baselineDays}일)
@@ -1541,50 +1585,6 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ historyData, viewMode, setVie
                                                 </div>
                                             </div>
                                         ))}
-                                    </section>
-
-                                    <section className={`rounded-xl border p-3 ${isDark ? "border-slate-600 bg-slate-800/60" : "border-slate-200 bg-white"}`}>
-                                        {!graphView.selectedNode && (
-                                            <p className={`text-sm leading-6 ${isDark ? "text-slate-300" : "text-slate-500"}`}>
-                                                노드를 선택하면 상세 정보를 볼 수 있습니다.
-                                            </p>
-                                        )}
-                                        {graphView.selectedNode && (
-                                            <div className="space-y-3">
-                                                {selectedGraphHistoryId && (
-                                                    <button
-                                                        type="button"
-                                                        className={`rounded-md px-2 py-1 text-xs font-semibold ${isDark ? "bg-sky-600 text-white hover:bg-sky-500" : "bg-sky-100 text-sky-800 border border-sky-200 hover:bg-sky-200"}`}
-                                                        onClick={() => {
-                                                            setSelectedId(selectedGraphHistoryId);
-                                                            setViewMode("list");
-                                                        }}
-                                                    >
-                                                        히스토리에서 보기
-                                                    </button>
-                                                )}
-                                                <div>
-                                                    <p className="text-xs text-slate-400">노드 유형</p>
-                                                    <p className="text-sm font-semibold">{graphView.selectedNode.type ?? "unknown"}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs text-slate-400">라벨</p>
-                                                    <p className="text-sm font-semibold break-words">{graphView.selectedNode.label ?? graphView.selectedNode.key}</p>
-                                                </div>
-                                                {graphView.selectedNode.ts && (
-                                                    <div>
-                                                        <p className="text-xs text-slate-400">시각</p>
-                                                        <p className="text-sm">{graphView.selectedNode.ts}</p>
-                                                    </div>
-                                                )}
-                                                {graphView.selectedNode.full_text && (
-                                                    <div>
-                                                        <p className="text-xs text-slate-400">원문</p>
-                                                        <p className="text-sm leading-6 whitespace-pre-wrap break-words max-h-[260px] overflow-y-auto">{graphView.selectedNode.full_text}</p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
                                     </section>
                                 </div>
                             </aside>

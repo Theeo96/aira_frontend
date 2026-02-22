@@ -24,6 +24,33 @@ import SchedulePage from "./src/pages/SchedulePage";
 import EmailPage from "./src/pages/EmailPage";
 import { MicPermissionPage, CameraPermissionPage, LocationPermissionPage } from "./src/pages/PermissionPages";
 
+const ONBOARDING_COMPLETE_KEY = "aira.onboarding.completed";
+const LAB_MIC_TEST_ENABLED_KEY = "aira.lab.micTestEnabled";
+
+const isOnboardingCompleted = () => {
+  try {
+    return localStorage.getItem(ONBOARDING_COMPLETE_KEY) === "true";
+  } catch {
+    return false;
+  }
+};
+
+const setOnboardingCompleted = () => {
+  try {
+    localStorage.setItem(ONBOARDING_COMPLETE_KEY, "true");
+  } catch {
+    // Ignore storage write failures (private mode, quota, etc.)
+  }
+};
+
+const isLabMicTestEnabled = () => {
+  try {
+    return localStorage.getItem(LAB_MIC_TEST_ENABLED_KEY) === "true";
+  } catch {
+    return false;
+  }
+};
+
 const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>(AppState.SPLASH);
   const [activePersona, setActivePersona] = useState<Persona>("rumi");
@@ -37,11 +64,12 @@ const App: React.FC = () => {
   const [showMicTestModal, setShowMicTestModal] = useState(false);
   const [hasMicBeenTurnedOff, setHasMicBeenTurnedOff] = useState(false);
   const [hasShownMicTestModal, setHasShownMicTestModal] = useState(false);
-  const [isOnboarding, setIsOnboarding] = useState(true);
+  const [isOnboarding, setIsOnboarding] = useState(() => !isOnboardingCompleted());
   const [startSoundOption, setStartSoundOption] = useState<StartSoundOption>(() => {
     return (localStorage.getItem('startSoundOption') as StartSoundOption) || '1';
   });
   const [enableUISound, setEnableUISound] = useState<EnableUISound>(true);
+  const [enableLabMicTest, setEnableLabMicTest] = useState<boolean>(() => isLabMicTestEnabled());
 
   // UI Sound Earcons
   const { playSuccess } = useEarcon(enableUISound);
@@ -91,13 +119,23 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (appState === AppState.SPLASH) {
-      setTimeout(() => setAppState(AppState.PERMISSION), 2000);
+      const nextState = isOnboarding ? AppState.PERMISSION : AppState.HOME;
+      const timer = window.setTimeout(() => setAppState(nextState), 2000);
+      return () => window.clearTimeout(timer);
     }
-  }, [appState]);
+  }, [appState, isOnboarding]);
 
   useEffect(() => {
     localStorage.setItem('startSoundOption', startSoundOption);
   }, [startSoundOption]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LAB_MIC_TEST_ENABLED_KEY, enableLabMicTest ? "true" : "false");
+    } catch {
+      // Ignore storage write failures.
+    }
+  }, [enableLabMicTest]);
 
   const handleSend = async () => {
     if (!inputText.trim()) return;
@@ -121,6 +159,7 @@ const App: React.FC = () => {
   const handleMicPermission = async () => {
     const granted = await requestMicPermission();
     if (granted) {
+      playSuccess();
       setAppState(AppState.CAMERA_PERMISSION);
     } else {
       alert("마이크 권한이 차단되어 있습니다.\n\n브라우저 주소창의 권한 설정에서 마이크를 허용해 주세요.");
@@ -154,6 +193,7 @@ const App: React.FC = () => {
       const audio = new Audio(`/start_signal${startSoundOption}.mp3`);
       audio.play().catch(e => console.log("Audio play failed:", e));
     }
+    setOnboardingCompleted();
     setIsOnboarding(false);
     setAppState(AppState.HOME);
   };
@@ -246,7 +286,7 @@ const App: React.FC = () => {
 
     if (nextState) {
       setActiveMessage(""); // Clear active message to let the "listening quote" show immediately
-      if (hasMicBeenTurnedOff && !hasShownMicTestModal) {
+      if (enableLabMicTest && hasMicBeenTurnedOff && !hasShownMicTestModal) {
         setShowMicTestModal(true);
         setHasShownMicTestModal(true);
       }
@@ -572,6 +612,7 @@ const App: React.FC = () => {
         gradientDirection={gradientDirection} onDirectionChange={setGradientDirection}
         startSoundOption={startSoundOption} setStartSoundOption={setStartSoundOption}
         enableUISound={enableUISound} setEnableUISound={setEnableUISound}
+        enableLabMicTest={enableLabMicTest} setEnableLabMicTest={setEnableLabMicTest}
       />
       <MicTestModal isOpen={showMicTestModal} onClose={() => setShowMicTestModal(false)} />
     </div>

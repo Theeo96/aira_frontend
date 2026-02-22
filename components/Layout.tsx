@@ -115,6 +115,8 @@ interface DrawerProps {
   setStartSoundOption: (option: StartSoundOption) => void;
   enableUISound: EnableUISound;
   setEnableUISound: (enabled: EnableUISound) => void;
+  enableLabMicTest: boolean;
+  setEnableLabMicTest: (enabled: boolean) => void;
 }
 
 export const Drawer: React.FC<DrawerProps> = ({
@@ -136,6 +138,8 @@ export const Drawer: React.FC<DrawerProps> = ({
   setStartSoundOption,
   enableUISound,
   setEnableUISound,
+  enableLabMicTest,
+  setEnableLabMicTest,
 }) => {
   const [expandedSetting, setExpandedSetting] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -468,6 +472,16 @@ export const Drawer: React.FC<DrawerProps> = ({
                           <button onClick={() => setEnableUISound(true)} className={`px-3 py-1.5 rounded-md transition-colors ${enableUISound ? 'bg-gray-100 font-medium text-black shadow-sm' : 'text-gray-500 hover:bg-gray-50'}`}>켜기 (ON)</button>
                           <button onClick={() => setEnableUISound(false)} className={`px-3 py-1.5 rounded-md transition-colors ${!enableUISound ? 'bg-gray-100 font-medium text-black shadow-sm' : 'text-gray-500 hover:bg-gray-50'}`}>끄기 (OFF)</button>
                         </div>
+                      </div>
+
+                      {/* Dev-only: Mic Test Popup */}
+                      <div className="pt-3 border-t border-gray-100">
+                        <div className="font-semibold text-gray-800 text-[13px] mb-2 flex items-center gap-1.5"><Activity size={14} />마이크 테스트 팝업</div>
+                        <div className="flex items-center justify-between text-[13px] px-1 bg-white rounded-lg p-1 border border-gray-50 shadow-inner">
+                          <button onClick={() => setEnableLabMicTest(true)} className={`px-3 py-1.5 rounded-md transition-colors ${enableLabMicTest ? 'bg-gray-100 font-medium text-black shadow-sm' : 'text-gray-500 hover:bg-gray-50'}`}>켜기 (ON)</button>
+                          <button onClick={() => setEnableLabMicTest(false)} className={`px-3 py-1.5 rounded-md transition-colors ${!enableLabMicTest ? 'bg-gray-100 font-medium text-black shadow-sm' : 'text-gray-500 hover:bg-gray-50'}`}>끄기 (OFF)</button>
+                        </div>
+                        <p className="mt-2 text-[11px] text-gray-500">개발/검증용 기능입니다. 마이크를 껐다 켤 때 테스트 팝업이 표시됩니다.</p>
                       </div>
                     </div>
 
