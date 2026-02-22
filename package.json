@@ -8,15 +8,22 @@
     "build": "vite build",
     "preview": "vite preview",
     "build:history": "npm run stamp:graph-scores && node scripts/build-history-from-graph.mjs",
+    "build:history:graph": "node scripts/build-history-from-graph-with-ts.mjs",
     "stamp:graph-datetime": "node scripts/stamp-graph-source-datetime.mjs",
     "stamp:graph-scores": "node scripts/stamp-graph-source-scores-from-seed.mjs",
     "stamp:graph-persona": "node scripts/stamp-graph-source-persona-replies.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.39.0",
+    "@react-sigma/core": "^5.0.6",
+    "@react-three/fiber": "^9.5.0",
+    "graphology": "^0.26.0",
+    "graphology-layout-forceatlas2": "^0.10.1",
     "lucide-react": "^0.563.0",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "sigma": "^3.0.2",
+    "three": "^0.183.1"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",
