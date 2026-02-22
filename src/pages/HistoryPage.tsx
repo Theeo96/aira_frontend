@@ -56,11 +56,11 @@ interface HistoryPageProps {
 type OpenHistoryPayload =
   | string
   | {
-      historyId?: string;
-      memoryKey?: string;
-      snippet?: string;
-      fullText?: string;
-    };
+    historyId?: string;
+    memoryKey?: string;
+    snippet?: string;
+    fullText?: string;
+  };
 
 type Speaker = "ai" | "rumi" | "lami" | "user" | "unknown";
 
@@ -315,9 +315,9 @@ const colorWithAlpha = (color: string, alpha: number | string) => {
     const full =
       hex.length === 3
         ? hex
-            .split("")
-            .map((c) => c + c)
-            .join("")
+          .split("")
+          .map((c) => c + c)
+          .join("")
         : hex;
     const parsed = Number.parseInt(full, 16);
     if (Number.isFinite(parsed)) {
@@ -1180,15 +1180,15 @@ const SigmaEmotionGlow: React.FC<{
           const isTargeted = TARGETED_EMOTION_IDS.has(emotionId);
           const radius = isTargeted
             ? clamp(
-                (display.size ?? 8) * 0.84 + Math.pow(ratio, 0.9) * 3.2,
-                3.2,
-                viewportBase * 0.011,
-              )
+              (display.size ?? 8) * 0.84 + Math.pow(ratio, 0.9) * 3.2,
+              3.2,
+              viewportBase * 0.011,
+            )
             : clamp(
-                (display.size ?? 8) * 1.2 + Math.pow(ratio, 0.85) * 12,
-                6,
-                viewportBase * 0.03,
-              );
+              (display.size ?? 8) * 1.2 + Math.pow(ratio, 0.85) * 12,
+              6,
+              viewportBase * 0.03,
+            );
           const coreAlpha = (isTargeted ? 0.004 : 0.015) * alphaBoost;
           const mistAlpha = (isTargeted ? 0.002 : 0.007) * alphaBoost;
 
@@ -1285,10 +1285,10 @@ const GraphEvents: React.FC<{
   onSelect: (
     node:
       | (GraphNode & {
-          key: string;
-          nodeType?: string;
-          clusterKey?: string;
-        })
+        key: string;
+        nodeType?: string;
+        clusterKey?: string;
+      })
       | null,
   ) => void;
 }> = ({ onSelect }) => {
@@ -1355,19 +1355,35 @@ const HistoryPage: React.FC<HistoryPageProps> = ({
       setGraphLoading(true);
       setGraphError("");
       try {
-        const response = await fetch("/graph_with_ts.json", { cache: "no-store" });
+        const token = localStorage.getItem("aira_user_token");
+        if (!token) throw new Error("No token found");
+        const response = await fetch(`https://thimblelike-nonopprobrious-lannie.ngrok-free.dev/api/memory?token=${encodeURIComponent(token)}`, { cache: "no-store" });
         if (!response.ok) {
           throw new Error(`graph_with_ts load failed: ${response.status}`);
         }
-        const payload = (await response.json()) as GraphPayload;
+        const payload = await response.json();
 
         if (canceled) {
           return;
         }
-        if (!Array.isArray(payload?.nodes) || !Array.isArray(payload?.edges)) {
-          throw new Error("invalid graphData payload");
+        if (payload.ok && payload.data && Array.isArray(payload.data)) {
+          const allNodes: any[] = [];
+          const allEdges: any[] = [];
+          payload.data.forEach((item: any) => {
+            if (item.graph) {
+              allNodes.push(...(item.graph.nodes || []));
+              allEdges.push(...(item.graph.edges || []));
+            }
+          });
+
+          const uniqueMap = new Map();
+          allNodes.forEach(n => uniqueMap.set(n.key, n));
+          const uniqueNodes = Array.from(uniqueMap.values());
+
+          setGraphData({ nodes: uniqueNodes, edges: allEdges } as GraphPayload);
+        } else {
+          throw new Error("invalid graphData payload from API");
         }
-        setGraphData(payload);
       } catch (error) {
         if (canceled) {
           return;
@@ -2156,11 +2172,10 @@ const HistoryPage: React.FC<HistoryPageProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsDateFilterOpen((prev) => !prev)}
-                  className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border shadow-sm ${
-                    dateFrom || dateTo
+                  className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border shadow-sm ${dateFrom || dateTo
                       ? "bg-blue-50 border-blue-200 text-blue-700"
                       : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
-                  }`}
+                    }`}
                 >
                   <CalendarDays size={16} />
                   기간
