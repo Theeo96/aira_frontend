@@ -64,13 +64,13 @@ const BrandStoryPage: React.FC<BrandStoryPageProps> = ({ setAppState }) => {
                             <div className="bg-white/40 p-4 rounded-xl border border-white/60 shadow-sm">
                                 <p className="text-[16px] leading-[1.6]">
                                     당신의 상처와 감정에 깊이 공감하고 다독여주는 따뜻한 친구,
-                                    <strong className="text-[#FF7A59]"> 루미(Rumi)</strong>.
+                                    <strong className="text-[#20B2AA]"> 루미(Lumi)</strong>.
                                 </p>
                             </div>
                             <div className="bg-white/40 p-4 rounded-xl border border-white/60 shadow-sm">
                                 <p className="text-[16px] leading-[1.6]">
                                     당신의 고민을 객관적으로 바라보고 명쾌한 해결책을 짚어주는
-                                    이성적인 친구, <strong className="text-[#20B2AA]">라미(Lami)</strong>.
+                                    이성적인 친구, <strong className="text-[#FF7A59]">라미(Rami)</strong>.
                                 </p>
                             </div>
                         </div>
