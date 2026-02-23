@@ -122,6 +122,7 @@ interface DrawerProps {
   onEnableLabMicTestChange: (enabled: boolean) => void;
   userEmail?: string;
   onLogout?: () => void;
+  onRequestPermissions?: () => void;
 }
 
 export const Drawer: React.FC<DrawerProps> = ({
@@ -150,6 +151,7 @@ export const Drawer: React.FC<DrawerProps> = ({
   onEnableLabMicTestChange,
   userEmail,
   onLogout,
+  onRequestPermissions,
 }) => {
   const [expandedSetting, setExpandedSetting] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -370,6 +372,30 @@ export const Drawer: React.FC<DrawerProps> = ({
                       <div className="font-semibold text-gray-800 mb-1">위치 정보</div>
                       <label className="flex items-center gap-2"><input type="checkbox" defaultChecked /> 교통·날씨에 활용</label>
                     </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 권한 관리 */}
+              <div className="border-b border-[#F5F5F5]">
+                <button onClick={() => toggleSetting('permissions')} className={drawerSectionButtonClass}>
+                  <div className="flex items-center gap-3"><Lock size={18} /><span>기기 권한 관리</span></div>
+                  {expandedSetting === 'permissions' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                </button>
+                {expandedSetting === 'permissions' && (
+                  <div className="pl-10 pr-5 pb-4 text-[14px] text-[#666666] flex flex-col gap-3 mt-2">
+                    <p className="text-[12px] leading-relaxed text-gray-500">
+                      카메라, 마이크 위치 등의 시스템 권한을 재설정합니다. 브라우저에서 차단된 경우 주소창에서도 직접 허용해야 합니다.
+                    </p>
+                    <button 
+                      onClick={() => {
+                        if (onRequestPermissions) onRequestPermissions();
+                        onClose();
+                      }}
+                      className="w-full text-center px-3 py-2 text-[12px] text-white font-medium bg-[color:var(--color-persona-primary)] hover:opacity-90 rounded-lg transition-colors"
+                    >
+                      권한 허용 다시 진행하기
+                    </button>
                   </div>
                 )}
               </div>

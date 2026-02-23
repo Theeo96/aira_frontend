@@ -733,6 +733,10 @@ const App: React.FC = () => {
 
       <Drawer
         isOpen={isDrawerOpen}
+        onRequestPermissions={() => {
+          setIsDrawerOpen(false);
+          setAppState(AppState.PERMISSION);
+        }}
         onClose={() => setIsDrawerOpen(false)}
         onNavigateToHistory={() => {
           setHistoryView("graph");
