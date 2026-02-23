@@ -17,6 +17,7 @@ export const useAiraMedia = (
     // Audio Queueing References
     const playbackContextRef = useRef<AudioContext | null>(null);
     const audioQueueRef = useRef<AudioBuffer[]>([]);
+    const nextStartTimeRef = useRef<number>(0);
     const isPlayingRef = useRef<boolean>(false);
 
     // Vision references
@@ -52,39 +53,51 @@ export const useAiraMedia = (
 
         // Int16 -> Float32 변환
         for (let i = 0; i < pcm16Data.length; i++) {
-            const s = Math.max(-1, Math.min(1, pcm16Data[i] / 32768.0));
-            float32Data[i] = s;
+            float32Data[i] = pcm16Data[i] / 32768.0;
         }
 
         audioQueueRef.current.push(audioBuffer);
-        playNextAudio();
+
+        // [핵심 1] Underrun(Starvation) 감지 로직
+        // 이미 재생 중이었지만 큐가 늦게 도착해 예약된 시간이 과거로 밀렸다면 즉시 상태 초기화
+        if (isPlayingRef.current && nextStartTimeRef.current < ctx.currentTime) {
+            isPlayingRef.current = false;
+        }
+
+        // [핵심 2] Jitter Buffer (Pre-buffering)
+        // 안 밀리게 최소 4조각이 모일 때까지 기다렸다가 방출
+        if (!isPlayingRef.current) {
+            if (audioQueueRef.current.length >= 4) {
+                isPlayingRef.current = true;
+                nextStartTimeRef.current = ctx.currentTime + 0.05; // 50ms 여유를 주고 시작
+                scheduleAllAudio();
+            }
+        } else {
+            // 이미 4개 이상 모여서 잘 재생되고 있으면 들어오는 대로 큐에 이어서 예약 발사
+            scheduleAllAudio();
+        }
     };
 
-    const playNextAudio = async () => {
-        if (isPlayingRef.current || audioQueueRef.current.length === 0) return;
-
-        isPlayingRef.current = true;
+    // [핵심 3] currentTime 기반 끊김 없는 예약 스케줄링
+    const scheduleAllAudio = () => {
         const ctx = playbackContextRef.current;
         if (!ctx) return;
-
         if (ctx.state === "suspended") {
-            await ctx.resume();
+            ctx.resume();
         }
 
-        const buffer = audioQueueRef.current.shift();
-        if (!buffer) {
-            isPlayingRef.current = false;
-            return;
-        }
+        while (audioQueueRef.current.length > 0) {
+            const buffer = audioQueueRef.current.shift();
+            if (!buffer) continue;
 
-        const source = ctx.createBufferSource();
-        source.buffer = buffer;
-        source.connect(ctx.destination);
-        source.onended = () => {
-            isPlayingRef.current = false;
-            playNextAudio();
-        };
-        source.start();
+            const startTime = Math.max(ctx.currentTime, nextStartTimeRef.current);
+            const source = ctx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(ctx.destination);
+
+            source.start(startTime);
+            nextStartTimeRef.current = startTime + buffer.duration;
+        }
     };
 
     // --- Microphone Capture ---

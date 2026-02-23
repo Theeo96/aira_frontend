@@ -32,4 +32,5 @@ export enum AppState {
   MATERIAL = "MATERIAL",
   SETTINGS = "SETTINGS",
   BRAND_STORY = "BRAND_STORY",
+  BOARD = "BOARD",
 }
