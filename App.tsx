@@ -167,11 +167,23 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (appState === AppState.SPLASH) {
-      // If userToken is missing, guide to LOGIN instead of HOME
-      const loggedInNextState = isOnboarding ? AppState.PERMISSION : AppState.HOME;
-      const nextState = userToken ? loggedInNextState : AppState.LOGIN;
+      let nextState;
+      if (isOnboarding) {
+        // 첫 사용자(온보딩 안함)는 토큰 유무 상관없이 무조건 권한/온보딩 화면으로
+        nextState = AppState.PERMISSION;
+      } else if (!userToken) {
+        // 온보딩은 끝났으나 토큰이 없으면 로그인 화면으로
+        nextState = AppState.LOGIN;
+      } else {
+        // 둘 다 아니면 (온보딩 끝, 토큰 있음) 홈 화면으로
+        nextState = AppState.HOME;
+      }
       const timer = window.setTimeout(() => setAppState(nextState), 2000);
       return () => window.clearTimeout(timer);
+    } else if (appState === AppState.LOGIN && userToken) {
+      // 만약 토큰이 세팅되어 로그인 페이지에 있다면 온보딩/권한 화면으로 바로 이동 (이미 온보딩을 했으면 HOME)
+      const nextState = isOnboarding ? AppState.PERMISSION : AppState.HOME;
+      setAppState(nextState);
     }
   }, [appState, isOnboarding, userToken]);
 
@@ -694,20 +706,43 @@ const App: React.FC = () => {
       <Drawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
-        onNavigate={(state) => {
-          if (state === AppState.HISTORY) setHistoryView("graph");
-          setAppState(state);
+        onNavigateToHistory={() => {
+          setHistoryView("graph");
           setIsDrawerOpen(false);
+          setAppState(AppState.HISTORY);
         }}
-        theme={theme} setTheme={setTheme}
-        gradientSpeed={gradientSpeed} setGradientSpeed={setGradientSpeed}
-        gradientOpacity={gradientOpacity} setGradientOpacity={setGradientOpacity}
-        speakerMode={speakerMode} setSpeakerMode={setSpeakerMode}
-        setActivePersona={setActivePersona}
-        gradientDirection={gradientDirection} onDirectionChange={setGradientDirection}
-        startSoundOption={startSoundOption} setStartSoundOption={setStartSoundOption}
-        enableUISound={enableUISound} setEnableUISound={setEnableUISound}
-        enableLabMicTest={enableLabMicTest} setEnableLabMicTest={setEnableLabMicTest}
+        onNavigateToBoard={() => {
+          setIsDrawerOpen(false);
+          setAppState(AppState.BOARD);
+        }}
+        onMicTestOpen={() => {
+          setIsDrawerOpen(false);
+          setShowMicTestModal(true);
+        }}
+        theme={theme}
+        onThemeChange={setTheme}
+        gradientSpeed={gradientSpeed}
+        onSpeedChange={setGradientSpeed}
+        gradientOpacity={gradientOpacity}
+        onOpacityChange={setGradientOpacity}
+        gradientDirection={gradientDirection}
+        onDirectionChange={setGradientDirection}
+        speakerMode={speakerMode}
+        onSpeakerModeChange={setSpeakerMode}
+        startSoundOption={startSoundOption}
+        onStartSoundOptionChange={setStartSoundOption}
+        enableUISound={enableUISound}
+        onEnableUISoundChange={setEnableUISound}
+        enableLabMicTest={enableLabMicTest}
+        onEnableLabMicTestChange={setEnableLabMicTest}
+        userEmail={userToken || "로그인이 필요합니다"}
+        onLogout={() => {
+          localStorage.removeItem("aira_user_token");
+          setUserToken(null);
+          airaSocketService.disconnect();
+          setIsDrawerOpen(false);
+          setAppState(AppState.LOGIN);
+        }}
       />
       <MicTestModal isOpen={showMicTestModal} onClose={() => setShowMicTestModal(false)} />
     </div>

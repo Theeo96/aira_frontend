@@ -99,47 +99,55 @@ export const Header: React.FC<HeaderProps> = ({
 interface DrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  onNavigate: (state: AppState) => void;
+  onNavigateToHistory: () => void;
+  onNavigateToBoard: () => void;
+  onMicTestOpen: () => void;
   theme: GradientTheme;
-  setTheme: (t: GradientTheme) => void;
+  onThemeChange: (t: GradientTheme) => void;
   gradientSpeed: GradientSpeed;
-  setGradientSpeed: (s: GradientSpeed) => void;
+  onSpeedChange: (s: GradientSpeed) => void;
   gradientOpacity: GradientOpacity;
-  setGradientOpacity: (o: GradientOpacity) => void;
+  onOpacityChange: (o: GradientOpacity) => void;
   speakerMode: "rumi" | "lami" | "both";
-  setSpeakerMode: (mode: "rumi" | "lami" | "both") => void;
-  setActivePersona: (persona: Persona) => void;
+  onSpeakerModeChange: (mode: "rumi" | "lami" | "both") => void;
+  setActivePersona?: (persona: Persona) => void;
   gradientDirection: GradientDirection;
   onDirectionChange: (d: GradientDirection) => void;
   startSoundOption: StartSoundOption;
-  setStartSoundOption: (option: StartSoundOption) => void;
+  onStartSoundOptionChange: (option: StartSoundOption) => void;
   enableUISound: EnableUISound;
-  setEnableUISound: (enabled: EnableUISound) => void;
+  onEnableUISoundChange: (enabled: EnableUISound) => void;
   enableLabMicTest: boolean;
-  setEnableLabMicTest: (enabled: boolean) => void;
+  onEnableLabMicTestChange: (enabled: boolean) => void;
+  userEmail?: string;
+  onLogout?: () => void;
 }
 
 export const Drawer: React.FC<DrawerProps> = ({
   isOpen,
   onClose,
-  onNavigate,
+  onNavigateToHistory,
+  onNavigateToBoard,
+  onMicTestOpen,
   theme,
-  setTheme,
+  onThemeChange,
   gradientSpeed,
-  setGradientSpeed,
+  onSpeedChange,
   gradientOpacity,
-  setGradientOpacity,
+  onOpacityChange,
   speakerMode,
-  setSpeakerMode,
+  onSpeakerModeChange,
   setActivePersona,
   gradientDirection,
   onDirectionChange,
   startSoundOption,
-  setStartSoundOption,
+  onStartSoundOptionChange,
   enableUISound,
-  setEnableUISound,
+  onEnableUISoundChange,
   enableLabMicTest,
-  setEnableLabMicTest,
+  onEnableLabMicTestChange,
+  userEmail,
+  onLogout,
 }) => {
   const [expandedSetting, setExpandedSetting] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -149,7 +157,7 @@ export const Drawer: React.FC<DrawerProps> = ({
   };
 
   const handleSoundPreview = (option: StartSoundOption) => {
-    setStartSoundOption(option);
+    onStartSoundOptionChange(option);
     if (option !== 'off') {
       const audio = new Audio(`/start_signal${option}.mp3`);
       audio.play().catch(e => console.log("Preview failed:", e));
@@ -196,7 +204,7 @@ export const Drawer: React.FC<DrawerProps> = ({
         <nav className="flex-1 overflow-y-auto w-full mt-4">
           {/* 1. 브랜드스토리 */}
           <button
-            onClick={() => onNavigate(AppState.BRAND_STORY)}
+            onClick={() => { }}
             className={drawerNavButtonClass}
           >
             <BookOpen size={24} />
@@ -208,9 +216,9 @@ export const Drawer: React.FC<DrawerProps> = ({
             </div>
           </button>
 
-          {/* 2. 업로드 (자료+대화) */}
+          {/* 2. 게시판 (업로드) */}
           <button
-            onClick={() => onNavigate(AppState.CHAT_FILE)}
+            onClick={onNavigateToBoard}
             className={drawerNavButtonClass}
           >
             <FolderOpen size={24} />
@@ -226,7 +234,7 @@ export const Drawer: React.FC<DrawerProps> = ({
 
           {/* 3. 히스토리 */}
           <button
-            onClick={() => onNavigate(AppState.HISTORY)}
+            onClick={onNavigateToHistory}
             className={drawerNavButtonClass}
           >
             <History size={24} />
@@ -267,19 +275,30 @@ export const Drawer: React.FC<DrawerProps> = ({
                 {expandedSetting === 'account' && (
                   <div className="pl-10 pr-5 pb-4 flex flex-col gap-3 mt-1">
                     <div className="flex items-center justify-between w-full bg-[#fcfcfc] border border-gray-100 p-2.5 rounded-lg">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-[color:var(--color-persona-primary)] flex items-center justify-center text-white font-bold text-xs shadow-sm">K</div>
-                        <div className="flex flex-col">
-                          <span className="font-bold text-gray-800 text-[13px] leading-tight">카리나님</span>
-                          <span className="text-gray-400 text-[10px] leading-tight">user@email.com</span>
+                      <div className="flex items-center gap-2.5 overflow-hidden">
+                        <div className="w-7 h-7 shrink-0 rounded-full bg-[color:var(--color-persona-primary)] flex items-center justify-center text-white font-bold text-xs shadow-sm">
+                          {userEmail ? userEmail.charAt(0).toUpperCase() : "U"}
+                        </div>
+                        <div className="flex flex-col truncate">
+                          <span className="font-bold text-gray-800 text-[13px] leading-tight truncate">
+                            {userEmail ? userEmail.split('@')[0] + "님" : "사용자님"}
+                          </span>
+                          <span className="text-gray-400 text-[10px] leading-tight truncate">
+                            {userEmail || "로그인이 필요합니다"}
+                          </span>
                         </div>
                       </div>
-                      <button className="text-[11px] px-2.5 py-1 border border-gray-200 bg-white shadow-sm rounded text-gray-600 hover:bg-gray-50 transition-colors">로그아웃</button>
+                      <button
+                        onClick={onLogout}
+                        className="shrink-0 text-[11px] px-2.5 py-1 border border-gray-200 bg-white shadow-sm rounded text-gray-600 hover:bg-gray-50 transition-colors"
+                      >
+                        로그아웃
+                      </button>
                     </div>
 
                     <button
-                      onClick={() => onNavigate(AppState.LOGIN)}
-                      className="w-full text-center px-3 py-2 텍스트text-[12px] text-[color:var(--color-persona-primary)] font-medium bg-[#fcfcfc] border border-gray-100 hover:bg-gray-50 rounded-lg transition-colors flex items-center justify-center gap-1.5"
+                      onClick={onLogout}
+                      className="w-full text-center px-3 py-2 text-[12px] text-[color:var(--color-persona-primary)] font-medium bg-[#fcfcfc] border border-gray-100 hover:bg-gray-50 rounded-lg transition-colors flex items-center justify-center gap-1.5"
                     >
                       <User size={14} /> 다른 계정으로 로그인
                     </button>
@@ -391,15 +410,15 @@ export const Drawer: React.FC<DrawerProps> = ({
                         <div className="font-semibold text-gray-800 text-[13px] mb-2 flex items-center gap-1.5"><Palette size={14} />홈 화면 테마</div>
                         <div className="flex flex-col gap-1.5 text-[13px]">
                           <label className="flex items-center gap-2">
-                            <input type="radio" name="gradientTheme" checked={theme === 'aira'} onChange={() => setTheme('aira')} />
+                            <input type="radio" name="gradientTheme" checked={theme === 'aira'} onChange={() => onThemeChange('aira')} />
                             <span className="w-3 h-3 rounded-full bg-gradient-to-tr from-[#FF7300] to-[#A084E8] inline-block shadow-sm"></span> Aira (기본)
                           </label>
                           <label className="flex items-center gap-2">
-                            <input type="radio" name="gradientTheme" checked={theme === 'sunset'} onChange={() => setTheme('sunset')} />
+                            <input type="radio" name="gradientTheme" checked={theme === 'sunset'} onChange={() => onThemeChange('sunset')} />
                             <span className="w-3 h-3 rounded-full bg-gradient-to-tr from-[#FF6E3C] to-[#FFC850] inline-block shadow-sm"></span> 선셋 (따뜻함)
                           </label>
                           <label className="flex items-center gap-2">
-                            <input type="radio" name="gradientTheme" checked={theme === 'midnight'} onChange={() => setTheme('midnight')} />
+                            <input type="radio" name="gradientTheme" checked={theme === 'midnight'} onChange={() => onThemeChange('midnight')} />
                             <span className="w-3 h-3 rounded-full bg-gradient-to-tr from-[#323C50] to-[#96A0B4] inline-block shadow-sm"></span> 미드나잇 (모던)
                           </label>
                         </div>
@@ -410,15 +429,15 @@ export const Drawer: React.FC<DrawerProps> = ({
                         <div className="font-semibold text-gray-800 text-[13px] mb-2 flex items-center gap-1.5"><Activity size={14} />물결 속도</div>
                         <div className="flex items-center gap-4 text-[13px] justify-between px-1">
                           <label className="flex flex-col items-center gap-1 cursor-pointer">
-                            <input type="radio" name="gradientSpeed" checked={gradientSpeed === 'slow'} onChange={() => setGradientSpeed('slow')} />
+                            <input type="radio" name="gradientSpeed" checked={gradientSpeed === 'slow'} onChange={() => onSpeedChange('slow')} />
                             느리게
                           </label>
                           <label className="flex flex-col items-center gap-1 cursor-pointer">
-                            <input type="radio" name="gradientSpeed" checked={gradientSpeed === 'normal'} onChange={() => setGradientSpeed('normal')} />
+                            <input type="radio" name="gradientSpeed" checked={gradientSpeed === 'normal'} onChange={() => onSpeedChange('normal')} />
                             보통
                           </label>
                           <label className="flex flex-col items-center gap-1 cursor-pointer">
-                            <input type="radio" name="gradientSpeed" checked={gradientSpeed === 'fast'} onChange={() => setGradientSpeed('fast')} />
+                            <input type="radio" name="gradientSpeed" checked={gradientSpeed === 'fast'} onChange={() => onSpeedChange('fast')} />
                             빠르게
                           </label>
                         </div>
@@ -428,9 +447,9 @@ export const Drawer: React.FC<DrawerProps> = ({
                       <div className="pt-3 border-t border-gray-100">
                         <div className="font-semibold text-gray-800 text-[13px] mb-2 flex items-center gap-1.5"><Droplets size={14} />진하기</div>
                         <div className="flex items-center justify-between text-[13px] px-1 bg-white rounded-lg p-1 border border-gray-50 shadow-inner">
-                          <button onClick={() => setGradientOpacity('light')} className={`px-3 py-1.5 rounded-md transition-colors ${gradientOpacity === 'light' ? 'bg-gray-100 font-medium text-black shadow-sm' : 'text-gray-500 hover:bg-gray-50'}`}>은은하게</button>
-                          <button onClick={() => setGradientOpacity('normal')} className={`px-3 py-1.5 rounded-md transition-colors ${gradientOpacity === 'normal' ? 'bg-gray-100 font-medium text-black shadow-sm' : 'text-gray-500 hover:bg-gray-50'}`}>보통</button>
-                          <button onClick={() => setGradientOpacity('bold')} className={`px-3 py-1.5 rounded-md transition-colors ${gradientOpacity === 'bold' ? 'bg-gray-100 font-medium text-black shadow-sm' : 'text-gray-500 hover:bg-gray-50'}`}>비비드</button>
+                          <button onClick={() => onOpacityChange('light')} className={`px-3 py-1.5 rounded-md transition-colors ${gradientOpacity === 'light' ? 'bg-gray-100 font-medium text-black shadow-sm' : 'text-gray-500 hover:bg-gray-50'}`}>은은하게</button>
+                          <button onClick={() => onOpacityChange('normal')} className={`px-3 py-1.5 rounded-md transition-colors ${gradientOpacity === 'normal' ? 'bg-gray-100 font-medium text-black shadow-sm' : 'text-gray-500 hover:bg-gray-50'}`}>보통</button>
+                          <button onClick={() => onOpacityChange('bold')} className={`px-3 py-1.5 rounded-md transition-colors ${gradientOpacity === 'bold' ? 'bg-gray-100 font-medium text-black shadow-sm' : 'text-gray-500 hover:bg-gray-50'}`}>비비드</button>
                         </div>
                       </div>
 
@@ -469,8 +488,8 @@ export const Drawer: React.FC<DrawerProps> = ({
                       <div className="pt-3 border-t border-gray-100">
                         <div className="font-semibold text-gray-800 text-[13px] mb-2 flex items-center gap-1.5"><Activity size={14} />UI 상호작용 사운드</div>
                         <div className="flex items-center justify-between text-[13px] px-1 bg-white rounded-lg p-1 border border-gray-50 shadow-inner">
-                          <button onClick={() => setEnableUISound(true)} className={`px-3 py-1.5 rounded-md transition-colors ${enableUISound ? 'bg-gray-100 font-medium text-black shadow-sm' : 'text-gray-500 hover:bg-gray-50'}`}>켜기 (ON)</button>
-                          <button onClick={() => setEnableUISound(false)} className={`px-3 py-1.5 rounded-md transition-colors ${!enableUISound ? 'bg-gray-100 font-medium text-black shadow-sm' : 'text-gray-500 hover:bg-gray-50'}`}>끄기 (OFF)</button>
+                          <button onClick={() => onEnableUISoundChange(true)} className={`px-3 py-1.5 rounded-md transition-colors ${enableUISound ? 'bg-gray-100 font-medium text-black shadow-sm' : 'text-gray-500 hover:bg-gray-50'}`}>켜기 (ON)</button>
+                          <button onClick={() => onEnableUISoundChange(false)} className={`px-3 py-1.5 rounded-md transition-colors ${!enableUISound ? 'bg-gray-100 font-medium text-black shadow-sm' : 'text-gray-500 hover:bg-gray-50'}`}>끄기 (OFF)</button>
                         </div>
                       </div>
 
@@ -478,8 +497,8 @@ export const Drawer: React.FC<DrawerProps> = ({
                       <div className="pt-3 border-t border-gray-100">
                         <div className="font-semibold text-gray-800 text-[13px] mb-2 flex items-center gap-1.5"><Activity size={14} />마이크 테스트 팝업</div>
                         <div className="flex items-center justify-between text-[13px] px-1 bg-white rounded-lg p-1 border border-gray-50 shadow-inner">
-                          <button onClick={() => setEnableLabMicTest(true)} className={`px-3 py-1.5 rounded-md transition-colors ${enableLabMicTest ? 'bg-gray-100 font-medium text-black shadow-sm' : 'text-gray-500 hover:bg-gray-50'}`}>켜기 (ON)</button>
-                          <button onClick={() => setEnableLabMicTest(false)} className={`px-3 py-1.5 rounded-md transition-colors ${!enableLabMicTest ? 'bg-gray-100 font-medium text-black shadow-sm' : 'text-gray-500 hover:bg-gray-50'}`}>끄기 (OFF)</button>
+                          <button onClick={() => onEnableLabMicTestChange(true)} className={`px-3 py-1.5 rounded-md transition-colors ${enableLabMicTest ? 'bg-gray-100 font-medium text-black shadow-sm' : 'text-gray-500 hover:bg-gray-50'}`}>켜기 (ON)</button>
+                          <button onClick={() => onEnableLabMicTestChange(false)} className={`px-3 py-1.5 rounded-md transition-colors ${!enableLabMicTest ? 'bg-gray-100 font-medium text-black shadow-sm' : 'text-gray-500 hover:bg-gray-50'}`}>끄기 (OFF)</button>
                         </div>
                         <p className="mt-2 text-[11px] text-gray-500">개발/검증용 기능입니다. 마이크를 껐다 켤 때 테스트 팝업이 표시됩니다.</p>
                       </div>
@@ -490,15 +509,15 @@ export const Drawer: React.FC<DrawerProps> = ({
                       <div className="font-semibold text-gray-800 text-[13px] mb-2 flex items-center gap-1.5"><UserCircle size={14} />AI 발화자 모드</div>
                       <div className="flex flex-col gap-2 text-[13px] px-1">
                         <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="radio" name="speakerMode" checked={speakerMode === 'both'} onChange={() => setSpeakerMode('both')} />
+                          <input type="radio" name="speakerMode" checked={speakerMode === 'both'} onChange={() => onSpeakerModeChange('both')} />
                           <span className="w-3 h-3 rounded-full bg-gradient-to-r from-[#E65C00] to-[#005C97] inline-block shadow-sm"></span> 번갈아 대화 (Both)
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="radio" name="speakerMode" checked={speakerMode === 'rumi'} onChange={() => { setSpeakerMode('rumi'); setActivePersona('rumi'); }} />
+                          <input type="radio" name="speakerMode" checked={speakerMode === 'rumi'} onChange={() => { onSpeakerModeChange('rumi'); setActivePersona?.('rumi'); }} />
                           <span className="w-3 h-3 rounded-full bg-[#E65C00] inline-block shadow-sm"></span> Rumi 전용
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="radio" name="speakerMode" checked={speakerMode === 'lami'} onChange={() => { setSpeakerMode('lami'); setActivePersona('lami'); }} />
+                          <input type="radio" name="speakerMode" checked={speakerMode === 'lami'} onChange={() => { onSpeakerModeChange('lami'); setActivePersona?.('lami'); }} />
                           <span className="w-3 h-3 rounded-full bg-[#005C97] inline-block shadow-sm"></span> Lami 전용
                         </label>
                       </div>
