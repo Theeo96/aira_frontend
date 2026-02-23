@@ -372,7 +372,7 @@ const HomePage: React.FC<HomePageProps> = ({
             {/* [Center Message Area] 중앙 메시지 영역 (z-10) */}
             <div className={`flex-1 flex flex-col items-center justify-center relative z-10 px-4 sm:px-6 ${isCameraOn ? "pt-[84px] pb-[104px] md:pt-[72px] md:pb-[108px]" : "pt-[56px] pb-[96px]"}`}>
                 {isCameraOn ? (
-                    <div className="relative h-full w-full flex items-center justify-center">
+                    <div className="relative h-full w-full flex items-center justify-center opacity-0 pointer-events-none">
                         <div className="relative h-full w-full overflow-hidden rounded-2xl border border-white/50 bg-black shadow-[0_16px_40px_rgba(0,0,0,0.25)] md:h-[86%] md:max-h-[680px] md:w-[88%] md:max-w-[980px] md:rounded-[28px]">
                             <video
                                 ref={videoRef}

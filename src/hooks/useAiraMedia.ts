@@ -185,7 +185,8 @@ export const useAiraMedia = (
             if (ctx) {
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 let base64Jpeg = canvas.toDataURL("image/jpeg", 0.8);
-                airaSocketService.sendVisionFrame(type, base64Jpeg);
+                const cleanBase64 = base64Jpeg.replace(/^data:image\/[a-z]+;base64,/, "");
+                airaSocketService.sendVisionFrame(type, cleanBase64);
 
                 // Memory Leak GC Hint (From Backend suggestion)
                 base64Jpeg = "";
