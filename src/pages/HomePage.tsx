@@ -370,36 +370,22 @@ const HomePage: React.FC<HomePageProps> = ({
             </div>
 
             {/* [Center Message Area] 중앙 메시지 영역 (z-10) */}
-            <div className={`flex-1 flex flex-col items-center justify-center relative z-10 px-4 sm:px-6 ${isCameraOn ? "pt-[84px] pb-[104px] md:pt-[72px] md:pb-[108px]" : "pt-[56px] pb-[96px]"}`}>
-                {isCameraOn ? (
-                    <div className="relative h-full w-full flex items-center justify-center opacity-0 pointer-events-none">
-                        <div className="relative h-full w-full overflow-hidden rounded-2xl border border-white/50 bg-black shadow-[0_16px_40px_rgba(0,0,0,0.25)] md:h-[86%] md:max-h-[680px] md:w-[88%] md:max-w-[980px] md:rounded-[28px]">
-                            <video
-                                ref={videoRef}
-                                autoPlay
-                                playsInline
-                                muted
-                                className="h-full w-full object-cover"
-                            />
-                            <div className="pointer-events-none absolute left-3 top-3 rounded-full bg-black/55 px-2 py-1 text-[11px] font-semibold tracking-wide text-white">
-                                CAMERA PREVIEW
-                            </div>
-                            {onSwitchCamera && (
-                                <button
-                                    type="button"
-                                    onClick={onSwitchCamera}
-                                    className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/45 bg-black/55 text-white transition-colors hover:bg-black/70 active:scale-[0.97]"
-                                    title="카메라 전/후면 전환"
-                                >
-                                    <RefreshCcw size={16} strokeWidth={2} />
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                ) : (
-                    <div
-                        className="text-[24px] md:text-[28px] font-semibold text-[#222222] text-center leading-[1.6] max-w-[320px] sm:max-w-[500px] transition-all duration-500 tracking-tight"
-                    >
+            <div className={`flex-1 flex flex-col items-center justify-center relative z-10 px-4 sm:px-6 pt-[56px] pb-[96px]`}>
+                
+                {/* 비디오 숨김 유지 (작동은 하되 화면에서 차지하는 공간과 시각 제거) */}
+                <div className="absolute w-[1px] h-[1px] overflow-hidden opacity-0 pointer-events-none">
+                    <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
+                        muted
+                        className="h-full w-full object-cover"
+                    />
+                </div>
+                
+                <div
+                    className="text-[24px] md:text-[28px] font-semibold text-[#222222] text-center leading-[1.6] max-w-[320px] sm:max-w-[500px] transition-all duration-500 tracking-tight"
+                >
                         {activeMessage ? (
                             <h2 className="quote-font break-keep drop-shadow-md text-[#111111]">
                                 {activeMessage}
@@ -445,7 +431,6 @@ const HomePage: React.FC<HomePageProps> = ({
                             </>
                         )}
                     </div>
-                )}
                 {cameraError && (
                     <p className="mt-3 rounded-xl border border-[#F6C6C6] bg-[#FFF5F5]/90 px-3 py-2 text-center text-[12px] font-medium text-[#B24141] backdrop-blur-sm">
                         {cameraError}
