@@ -200,10 +200,12 @@ export const useAiraMedia = (
 
     useEffect(() => {
         if (isCameraOn && cameraStream) {
+            airaSocketService.sendCameraState(true);
             visionIntervalRef.current = setInterval(() => {
                 captureFrame(cameraStream, "camera_frame");
             }, 1000); // 1 FPS
         } else if (isScreenSharing && screenStream) {
+            airaSocketService.sendCameraState(true);
             visionIntervalRef.current = setInterval(() => {
                 captureFrame(screenStream, "screen_frame");
             }, 1000);
@@ -211,6 +213,7 @@ export const useAiraMedia = (
             if (visionIntervalRef.current) {
                 clearInterval(visionIntervalRef.current);
                 visionIntervalRef.current = null;
+                airaSocketService.sendCameraState(false);
             }
         }
 
@@ -218,6 +221,7 @@ export const useAiraMedia = (
             if (visionIntervalRef.current) {
                 clearInterval(visionIntervalRef.current);
                 visionIntervalRef.current = null;
+                airaSocketService.sendCameraState(false);
             }
         };
     }, [isCameraOn, cameraStream, isScreenSharing, screenStream, captureFrame]);
