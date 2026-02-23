@@ -58,7 +58,7 @@ const App: React.FC = () => {
   const [activePersona, setActivePersona] = useState<Persona>("rumi");
   const [speakerMode, setSpeakerMode] = useState<"rumi" | "lami" | "both">("both");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isListening, setIsListening] = useState(true);
+  const [isListening, setIsListening] = useState(false);
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState("");
@@ -713,7 +713,11 @@ const App: React.FC = () => {
         }}
         onNavigateToBoard={() => {
           setIsDrawerOpen(false);
-          setAppState(AppState.BOARD);
+          setAppState(AppState.CHAT_FILE);
+        }}
+        onNavigateToBrandStory={() => {
+          setIsDrawerOpen(false);
+          setAppState(AppState.BRAND_STORY);
         }}
         onMicTestOpen={() => {
           setIsDrawerOpen(false);

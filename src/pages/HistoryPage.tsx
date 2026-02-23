@@ -1324,6 +1324,9 @@ const HistoryPage: React.FC<HistoryPageProps> = ({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedMemoryKey, setSelectedMemoryKey] = useState<string | null>(null);
   const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
+  const [useMockData, setUseMockData] = useState(false);
+  const [mockHistoryData, setMockHistoryData] = useState<HistoryItem[] | null>(null);
+  const displayedHistoryData = useMockData && mockHistoryData ? mockHistoryData : historyData;
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [graphData, setGraphData] = useState<GraphPayload | null>(null);
@@ -1357,19 +1360,30 @@ const HistoryPage: React.FC<HistoryPageProps> = ({
       try {
         const token = localStorage.getItem("aira_user_token");
         if (!token) throw new Error("No token found");
-        const response = await fetch(`https://thimblelike-nonopprobrious-lannie.ngrok-free.dev/api/memory?token=${encodeURIComponent(token)}`, { cache: "no-store" });
+        const response = await fetch(
+          useMockData
+            ? "/historyFromGraph.json"
+            : `https://thimblelike-nonopprobrious-lannie.ngrok-free.dev/api/memory?token=${encodeURIComponent(token)}`,
+          { cache: "no-store" }
+        );
         if (!response.ok) {
-          throw new Error(`graph_with_ts load failed: ${response.status}`);
+          throw new Error(`history data load failed: ${response.status}`);
         }
         const payload = await response.json();
 
         if (canceled) {
           return;
         }
-        if (payload.ok && payload.data && Array.isArray(payload.data)) {
+
+        const dataArr = useMockData ? payload : (payload.data || []);
+
+        if (Array.isArray(dataArr)) {
+          if (useMockData) {
+            setMockHistoryData(dataArr as HistoryItem[]);
+          }
           const allNodes: any[] = [];
           const allEdges: any[] = [];
-          payload.data.forEach((item: any) => {
+          dataArr.forEach((item: any) => {
             if (item.graph) {
               allNodes.push(...(item.graph.nodes || []));
               allEdges.push(...(item.graph.edges || []));
@@ -1382,7 +1396,7 @@ const HistoryPage: React.FC<HistoryPageProps> = ({
 
           setGraphData({ nodes: uniqueNodes, edges: allEdges } as GraphPayload);
         } else {
-          throw new Error("invalid graphData payload from API");
+          throw new Error("invalid graphData payload from API/Mock");
         }
       } catch (error) {
         if (canceled) {
@@ -1401,15 +1415,15 @@ const HistoryPage: React.FC<HistoryPageProps> = ({
     return () => {
       canceled = true;
     };
-  }, []);
+  }, [useMockData]);
 
   const historyDateById = useMemo(() => {
     const map = new Map<string, string>();
-    historyData.forEach((item) => {
+    displayedHistoryData.forEach((item) => {
       map.set(item.id, item.date);
     });
     return map;
-  }, [historyData]);
+  }, [displayedHistoryData]);
 
   const allMemoryNodesWithTs = useMemo(() => {
     if (!graphData) {
@@ -1820,7 +1834,7 @@ const HistoryPage: React.FC<HistoryPageProps> = ({
 
   const filteredHistory = useMemo(() => {
     const keyword = query.trim().toLowerCase();
-    return historyData.filter((item) => {
+    return displayedHistoryData.filter((item) => {
       const parsedDate = new Date(item.date);
       const hasValidDate = !Number.isNaN(parsedDate.getTime());
 
@@ -1857,19 +1871,19 @@ const HistoryPage: React.FC<HistoryPageProps> = ({
 
       return searchable.includes(keyword);
     });
-  }, [historyData, query, dateFrom, dateTo]);
+  }, [displayedHistoryData, query, dateFrom, dateTo]);
 
   const selectedItem = useMemo(() => {
     if (!selectedId) {
       return null;
     }
 
-    return historyData.find((item) => item.id === selectedId) ?? null;
-  }, [historyData, selectedId]);
+    return displayedHistoryData.find((item) => item.id === selectedId) ?? null;
+  }, [displayedHistoryData, selectedId]);
 
   const historyIdSet = useMemo(
-    () => new Set(historyData.map((item) => item.id)),
-    [historyData],
+    () => new Set(displayedHistoryData.map((item) => item.id)),
+    [displayedHistoryData],
   );
 
   const selectedGraphHistoryId = useMemo(() => {
@@ -1946,10 +1960,28 @@ const HistoryPage: React.FC<HistoryPageProps> = ({
     setSelectedGraphNodeKey(next.key);
   };
 
+  const mockToggleUI = (
+    <div className="absolute top-24 right-6 z-50 flex items-center space-x-2 bg-white/80 p-2 rounded-lg shadow-sm backdrop-blur-sm">
+      <span className="text-sm text-gray-700 font-medium">임시데이터</span>
+      <button
+        title="임시데이터 켜기/끄기"
+        className={`w-10 h-5 rounded-full relative transition-colors duration-200 focus:outline-none ${useMockData ? "bg-[#A084E8]" : "bg-gray-300"}`}
+        onClick={() => setUseMockData(!useMockData)}
+      >
+        <span
+          className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${useMockData ? "translate-x-5" : "translate-x-0"}`}
+        />
+      </button>
+    </div>
+  );
+
   if (viewMode === "graph") {
     return (
       <div className="bg-[#F0EEE9] pt-20" style={{ height: "100vh" }}>
+        {mockToggleUI}
+
         <HistoryGraphMvp
+          useMockData={useMockData}
           onOpenHistory={(payload: OpenHistoryPayload) => {
             const openRequest =
               typeof payload === "string" ? { historyId: payload } : (payload ?? {});
@@ -1974,7 +2006,7 @@ const HistoryPage: React.FC<HistoryPageProps> = ({
             let target: HistoryItem | undefined;
 
             if (requestedMemoryKey) {
-              target = historyData.find((item) =>
+              target = displayedHistoryData.find((item) =>
                 Array.isArray(item.memory_keys) &&
                 item.memory_keys.includes(requestedMemoryKey),
               );
@@ -1982,7 +2014,7 @@ const HistoryPage: React.FC<HistoryPageProps> = ({
 
             if (!target && requestedHistoryId) {
               const normalizedRequestedId = normalizeMemoryId(requestedHistoryId);
-              target = historyData.find(
+              target = displayedHistoryData.find(
                 (item) =>
                   item.id === requestedHistoryId || item.id === normalizedRequestedId,
               );
@@ -1991,7 +2023,7 @@ const HistoryPage: React.FC<HistoryPageProps> = ({
             if (!target && requestedMemoryKey) {
               const memoryId = extractMemoryIdFromKey(requestedMemoryKey);
               const normalizedMemoryId = normalizeMemoryId(memoryId);
-              target = historyData.find(
+              target = displayedHistoryData.find(
                 (item) => item.id === memoryId || item.id === normalizedMemoryId,
               );
             }
@@ -1999,14 +2031,14 @@ const HistoryPage: React.FC<HistoryPageProps> = ({
             if (!target) {
               const searchText = requestedSnippet || requestedFullText;
               if (searchText) {
-                target = historyData.find((item) => item.full_transcript.includes(searchText));
+                target = displayedHistoryData.find((item) => item.full_transcript.includes(searchText));
               }
             }
 
             if (!target && requestedFullText) {
               const normalizedNeedle = requestedFullText.replace(/\s+/g, " ").trim();
               if (normalizedNeedle) {
-                target = historyData.find((item) =>
+                target = displayedHistoryData.find((item) =>
                   item.full_transcript.replace(/\s+/g, " ").includes(normalizedNeedle),
                 );
               }
@@ -2038,6 +2070,7 @@ const HistoryPage: React.FC<HistoryPageProps> = ({
 
     return (
       <div className="h-full bg-[#F0EEE9] pt-24 pb-8 px-6 overflow-y-auto">
+        {mockToggleUI}
         <div className="mx-auto w-full max-w-4xl space-y-4">
           <button
             type="button"
@@ -2157,6 +2190,7 @@ const HistoryPage: React.FC<HistoryPageProps> = ({
 
   return (
     <div className="h-full bg-[#F0EEE9] pt-20">
+      {mockToggleUI}
       <div className="px-3 sm:px-6 py-2">
         <div className="mx-auto w-full max-w-4xl">
           <div className="mb-3 space-y-2">
@@ -2173,8 +2207,8 @@ const HistoryPage: React.FC<HistoryPageProps> = ({
                   type="button"
                   onClick={() => setIsDateFilterOpen((prev) => !prev)}
                   className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border shadow-sm ${dateFrom || dateTo
-                      ? "bg-blue-50 border-blue-200 text-blue-700"
-                      : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                    ? "bg-blue-50 border-blue-200 text-blue-700"
+                    : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
                     }`}
                 >
                   <CalendarDays size={16} />

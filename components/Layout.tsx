@@ -101,6 +101,7 @@ interface DrawerProps {
   onClose: () => void;
   onNavigateToHistory: () => void;
   onNavigateToBoard: () => void;
+  onNavigateToBrandStory?: () => void;
   onMicTestOpen: () => void;
   theme: GradientTheme;
   onThemeChange: (t: GradientTheme) => void;
@@ -128,6 +129,7 @@ export const Drawer: React.FC<DrawerProps> = ({
   onClose,
   onNavigateToHistory,
   onNavigateToBoard,
+  onNavigateToBrandStory,
   onMicTestOpen,
   theme,
   onThemeChange,
@@ -202,21 +204,7 @@ export const Drawer: React.FC<DrawerProps> = ({
 
         {/* Navigation Items */}
         <nav className="flex-1 overflow-y-auto w-full mt-4">
-          {/* 1. 브랜드스토리 */}
-          <button
-            onClick={() => { }}
-            className={drawerNavButtonClass}
-          >
-            <BookOpen size={24} />
-            <div className="text-left flex-1">
-              <div className="text-[16px]">브랜드스토리</div>
-              <div className="text-[12px] text-[#999999] mt-1">
-                AIRA의 탄생과 이야기
-              </div>
-            </div>
-          </button>
-
-          {/* 2. 게시판 (업로드) */}
+          {/* 1. 게시판 (업로드) */}
           <button
             onClick={onNavigateToBoard}
             className={drawerNavButtonClass}
@@ -232,7 +220,7 @@ export const Drawer: React.FC<DrawerProps> = ({
             </div>
           </button>
 
-          {/* 3. 히스토리 */}
+          {/* 2. 히스토리 */}
           <button
             onClick={onNavigateToHistory}
             className={drawerNavButtonClass}
@@ -246,6 +234,21 @@ export const Drawer: React.FC<DrawerProps> = ({
             </div>
           </button>
 
+          {/* 3. 브랜드스토리 */}
+          <button
+            onClick={() => {
+              if (onNavigateToBrandStory) onNavigateToBrandStory();
+            }}
+            className={drawerNavButtonClass}
+          >
+            <BookOpen size={24} />
+            <div className="text-left flex-1">
+              <div className="text-[16px]">브랜드스토리</div>
+              <div className="text-[12px] text-[#999999] mt-1">
+                AIRA의 탄생과 이야기
+              </div>
+            </div>
+          </button>
         </nav>
 
         {/* 4. 설정 (Bottom Fixed Area) */}
@@ -493,34 +496,6 @@ export const Drawer: React.FC<DrawerProps> = ({
                         </div>
                       </div>
 
-                      {/* Dev-only: Mic Test Popup */}
-                      <div className="pt-3 border-t border-gray-100">
-                        <div className="font-semibold text-gray-800 text-[13px] mb-2 flex items-center gap-1.5"><Activity size={14} />마이크 테스트 팝업</div>
-                        <div className="flex items-center justify-between text-[13px] px-1 bg-white rounded-lg p-1 border border-gray-50 shadow-inner">
-                          <button onClick={() => onEnableLabMicTestChange(true)} className={`px-3 py-1.5 rounded-md transition-colors ${enableLabMicTest ? 'bg-gray-100 font-medium text-black shadow-sm' : 'text-gray-500 hover:bg-gray-50'}`}>켜기 (ON)</button>
-                          <button onClick={() => onEnableLabMicTestChange(false)} className={`px-3 py-1.5 rounded-md transition-colors ${!enableLabMicTest ? 'bg-gray-100 font-medium text-black shadow-sm' : 'text-gray-500 hover:bg-gray-50'}`}>끄기 (OFF)</button>
-                        </div>
-                        <p className="mt-2 text-[11px] text-gray-500">개발/검증용 기능입니다. 마이크를 껐다 켤 때 테스트 팝업이 표시됩니다.</p>
-                      </div>
-                    </div>
-
-                    {/* AI 발화자 페르소나 선택 */}
-                    <div className="pt-3 mt-3 border-t border-gray-100">
-                      <div className="font-semibold text-gray-800 text-[13px] mb-2 flex items-center gap-1.5"><UserCircle size={14} />AI 발화자 모드</div>
-                      <div className="flex flex-col gap-2 text-[13px] px-1">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="radio" name="speakerMode" checked={speakerMode === 'both'} onChange={() => onSpeakerModeChange('both')} />
-                          <span className="w-3 h-3 rounded-full bg-gradient-to-r from-[#E65C00] to-[#005C97] inline-block shadow-sm"></span> 번갈아 대화 (Both)
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="radio" name="speakerMode" checked={speakerMode === 'rumi'} onChange={() => { onSpeakerModeChange('rumi'); setActivePersona?.('rumi'); }} />
-                          <span className="w-3 h-3 rounded-full bg-[#E65C00] inline-block shadow-sm"></span> Rumi 전용
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="radio" name="speakerMode" checked={speakerMode === 'lami'} onChange={() => { onSpeakerModeChange('lami'); setActivePersona?.('lami'); }} />
-                          <span className="w-3 h-3 rounded-full bg-[#005C97] inline-block shadow-sm"></span> Lami 전용
-                        </label>
-                      </div>
                     </div>
                   </div>
                 )}
@@ -528,7 +503,6 @@ export const Drawer: React.FC<DrawerProps> = ({
             </div>
           )}
         </div>
-
       </div>
     </div>
   );
