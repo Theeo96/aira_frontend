@@ -1359,11 +1359,11 @@ const HistoryPage: React.FC<HistoryPageProps> = ({
       setGraphError("");
       try {
         const token = localStorage.getItem("aira_user_token");
-        if (!token) throw new Error("No token found");
+        if (!useMockData && !token) throw new Error("No token found");
         const response = await fetch(
           useMockData
             ? "/historyFromGraph.json"
-            : `https://thimblelike-nonopprobrious-lannie.ngrok-free.dev/api/memory?token=${encodeURIComponent(token)}`,
+            : `https://thimblelike-nonopprobrious-lannie.ngrok-free.dev/api/memory?token=${encodeURIComponent(token || "")}`,
           { cache: "no-store" }
         );
         if (!response.ok) {

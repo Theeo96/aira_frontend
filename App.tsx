@@ -64,6 +64,9 @@ const App: React.FC = () => {
   const [cameraError, setCameraError] = useState("");
   const [cameraFacingMode, setCameraFacingMode] = useState<"user" | "environment">("user");
 
+  const [activeSpeaker, setActiveSpeaker] = useState<"user" | "rumi" | "lami" | null>(null);
+  const speakerTimeoutRef = React.useRef<number | null>(null);
+
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [screenStream, setScreenStream] = useState<MediaStream | null>(null);
   const [showMicTestModal, setShowMicTestModal] = useState(false);
@@ -169,19 +172,19 @@ const App: React.FC = () => {
     if (appState === AppState.SPLASH) {
       let nextState;
       if (isOnboarding) {
-        // 첫 사용자(온보딩 안함)는 토큰 유무 상관없이 무조건 권한/온보딩 화면으로
+        // 첫 사용자(온보딩 안함)는 권한/온보딩 화면으로 무조건 우선 이동
         nextState = AppState.PERMISSION;
       } else if (!userToken) {
         // 온보딩은 끝났으나 토큰이 없으면 로그인 화면으로
         nextState = AppState.LOGIN;
       } else {
-        // 둘 다 아니면 (온보딩 끝, 토큰 있음) 홈 화면으로
+        // 온보딩 끝, 토큰 있음 -> 홈 화면으로
         nextState = AppState.HOME;
       }
       const timer = window.setTimeout(() => setAppState(nextState), 2000);
       return () => window.clearTimeout(timer);
     } else if (appState === AppState.LOGIN && userToken) {
-      // 만약 토큰이 세팅되어 로그인 페이지에 있다면 온보딩/권한 화면으로 바로 이동 (이미 온보딩을 했으면 HOME)
+      // 로그인 창에서 구글 OAuth 연동을 마친 시점
       const nextState = isOnboarding ? AppState.PERMISSION : AppState.HOME;
       setAppState(nextState);
     }
@@ -201,13 +204,29 @@ const App: React.FC = () => {
     (transcriptObj) => {
       // transcriptObj => { type: "transcript", role: "user" | "lumi" | "rami", text: "..." }
       if (transcriptObj && transcriptObj.text) {
-        setActiveMessage(transcriptObj.text);
+        // setActiveMessage(transcriptObj.text); // 사용자의 요청에 따라 STT 전사 내역을 화면에 띄우지 않음
+
+        let currentSpeaker: "user" | "rumi" | "lami" | null = null;
 
         // 화자 라우팅 처리: "lumi" -> "lami" (프론트엔드 명칭 고려)
         if (transcriptObj.role === "lumi" || transcriptObj.role === "lami") {
           setActivePersona("lami");
+          currentSpeaker = "lami";
         } else if (transcriptObj.role === "rami" || transcriptObj.role === "rumi") {
           setActivePersona("rumi");
+          currentSpeaker = "rumi";
+        } else if (transcriptObj.role === "user") {
+          currentSpeaker = "user";
+        }
+
+        if (currentSpeaker) {
+          setActiveSpeaker(currentSpeaker);
+          if (speakerTimeoutRef.current !== null) {
+            window.clearTimeout(speakerTimeoutRef.current);
+          }
+          speakerTimeoutRef.current = window.setTimeout(() => {
+            setActiveSpeaker(null);
+          }, 2000);
         }
       }
     }
@@ -277,7 +296,11 @@ const App: React.FC = () => {
     }
     setOnboardingCompleted();
     setIsOnboarding(false);
-    setAppState(AppState.HOME);
+    if (!userToken) {
+      setAppState(AppState.LOGIN);
+    } else {
+      setAppState(AppState.HOME);
+    }
   };
 
   // ----- Retry Permission Handlers (From Home) -----
@@ -479,6 +502,7 @@ const App: React.FC = () => {
               isCameraOn={isCameraOn}
               cameraStream={cameraStream}
               cameraError={cameraError}
+              activeSpeaker={activeSpeaker}
             />
             <MicPermissionPage
               onPermissionGrant={handleMicPermission}
@@ -507,6 +531,7 @@ const App: React.FC = () => {
               isCameraOn={isCameraOn}
               cameraStream={cameraStream}
               cameraError={cameraError}
+              activeSpeaker={activeSpeaker}
               theme={theme}
               gradientSpeed={gradientSpeed}
               gradientOpacity={gradientOpacity}
@@ -538,6 +563,7 @@ const App: React.FC = () => {
               isCameraOn={isCameraOn}
               cameraStream={cameraStream}
               cameraError={cameraError}
+              activeSpeaker={activeSpeaker}
               theme={theme}
               gradientSpeed={gradientSpeed}
               gradientOpacity={gradientOpacity}
@@ -568,6 +594,7 @@ const App: React.FC = () => {
               isCameraOn={isCameraOn}
               cameraStream={cameraStream}
               cameraError={cameraError}
+              activeSpeaker={activeSpeaker}
               theme={theme}
               gradientSpeed={gradientSpeed}
               gradientOpacity={gradientOpacity}
@@ -596,6 +623,7 @@ const App: React.FC = () => {
               isCameraOn={isCameraOn}
               cameraStream={cameraStream}
               cameraError={cameraError}
+              activeSpeaker={activeSpeaker}
               theme={theme}
               gradientSpeed={gradientSpeed}
               gradientOpacity={gradientOpacity}

@@ -13,6 +13,7 @@ interface HomePageProps {
     cameraStream?: MediaStream | null;
     cameraError?: string;
     isScreenSharing?: boolean;
+    activeSpeaker?: "user" | "rumi" | "lami" | null;
     inputText: string;
     setInputText: (text: string) => void;
     onSend: () => void;
@@ -35,6 +36,7 @@ const HomePage: React.FC<HomePageProps> = ({
     cameraStream = null,
     cameraError = "",
     isScreenSharing = false,
+    activeSpeaker = null,
     inputText,
     setInputText,
     onSend,
@@ -297,6 +299,38 @@ const HomePage: React.FC<HomePageProps> = ({
         return styleObj;
     };
 
+    const getUserStyle = () => {
+        const isActive = activeSpeaker === "user";
+        const baseOpacity = isActive ? 0.85 * opacityMultiplier : 0;
+
+        const styleObj: any = {
+            backgroundColor: "rgba(255, 255, 255, 1)",
+            opacity: baseOpacity,
+            animationDuration: getAnimationDuration(6),
+            transition: "opacity 0.8s ease-in-out",
+            zIndex: 1,
+        };
+
+        if (gradientDirection === 'side') {
+            styleObj.width = "140vw";
+            styleObj.height = "150vh";
+            styleObj.left = "-20vw";
+            styleObj.top = "10vh";
+        } else if (gradientDirection === 'center') {
+            styleObj.width = "150vw";
+            styleObj.height = "150vw";
+            styleObj.left = "-25vw";
+            styleObj.top = "-5vh";
+        } else {
+            // Default: bottom
+            styleObj.width = "140vw";
+            styleObj.height = "140vw";
+            styleObj.left = "-20vw";
+            styleObj.bottom = "-25vw";
+        }
+        return styleObj;
+    };
+
     return (
         <div
             className={`flex flex-col h-full bg-[#FAFAFA] relative overflow-hidden transition-all duration-1000 ${gradientDirection === 'center' ? 'bg-[#F2F2F2]' : ''}`}
@@ -323,6 +357,12 @@ const HomePage: React.FC<HomePageProps> = ({
                 <div
                     className={`aurora-orb aurora-anim-2`}
                     style={getSecondaryStyle()}
+                />
+
+                {/* User Aurora Orb (White) */}
+                <div
+                    className={`aurora-orb aurora-anim-4`}
+                    style={getUserStyle()}
                 />
 
                 {/* 중립 화이트/그레이 블렌딩 (상단 자연스러운 페이드아웃) */}
@@ -375,10 +415,7 @@ const HomePage: React.FC<HomePageProps> = ({
                                 />
                                 <h2
                                     className={`quote-font break-keep whitespace-pre-line text-center leading-[1.6] tracking-tight font-bold text-[24px] md:text-[28px] max-w-[90%] md:max-w-full
-                                    bg-clip-text text-transparent
-                                    ${activePersona === 'rumi'
-                                            ? 'bg-gradient-to-r from-[#E65C00] to-[#F9A826]'
-                                            : 'bg-gradient-to-r from-[#005C97] to-[#363795]'}
+                                    text-[#111111]
                                     filter drop-shadow-[0_2px_12px_rgba(255,255,255,0.9)]`}
                                 >
                                     {listeningQuote}
@@ -513,7 +550,7 @@ const HomePage: React.FC<HomePageProps> = ({
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 };
 
