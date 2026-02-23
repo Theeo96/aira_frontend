@@ -296,7 +296,11 @@ const App: React.FC = () => {
     }
     setOnboardingCompleted();
     setIsOnboarding(false);
-    setAppState(AppState.HOME);
+    if (!userToken) {
+      setAppState(AppState.LOGIN);
+    } else {
+      setAppState(AppState.HOME);
+    }
   };
 
   // ----- Retry Permission Handlers (From Home) -----
