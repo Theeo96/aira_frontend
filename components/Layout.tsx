@@ -385,7 +385,7 @@ export const Drawer: React.FC<DrawerProps> = ({
                 {expandedSetting === 'permissions' && (
                   <div className="pl-10 pr-5 pb-4 text-[14px] text-[#666666] flex flex-col gap-3 mt-2">
                     <p className="text-[12px] leading-relaxed text-gray-500">
-                      카메라, 마이크 위치 등의 시스템 권한을 재설정합니다. 브라우저에서 차단된 경우 주소창에서도 직접 허용해야 합니다.
+                      카메라, 마이크, 위치정보 등의 시스템 권한을 다시 요청합니다. 브라우저에서 차단된 경우 주소창에서도 직접 허용해야 합니다.
                     </p>
                     <button 
                       onClick={() => {

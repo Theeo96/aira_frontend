@@ -168,17 +168,32 @@ const App: React.FC = () => {
     };
   }, []);
 
+  const [hasRequestedPerms, setHasRequestedPerms] = useState(() => {
+    try {
+      return sessionStorage.getItem("aira.perms.requested") === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  const markPermsRequested = () => {
+    try {
+      sessionStorage.setItem("aira.perms.requested", "true");
+      setHasRequestedPerms(true);
+    } catch {}
+  };
+
   useEffect(() => {
     if (appState === AppState.SPLASH) {
       let nextState;
-      if (isOnboarding) {
-        // 첫 사용자(온보딩 안함)는 권한/온보딩 화면으로 무조건 우선 이동
+      if (!hasRequestedPerms) {
+        // 이번 세션(탭)에서 권한 요청을 안 했다면 무조건 권한체크부터 (Onboarding 플래그 무관)
         nextState = AppState.PERMISSION;
       } else if (!userToken) {
-        // 온보딩은 끝났으나 토큰이 없으면 로그인 화면으로
+        // 이번 세션 권한체크 통과 & 토큰 없음 -> 로그인
         nextState = AppState.LOGIN;
       } else {
-        // 온보딩 끝, 토큰 있음 -> 홈 화면으로
+        // 권한체크 통과 & 토큰 있음 -> 홈
         nextState = AppState.HOME;
       }
       const timer = window.setTimeout(() => setAppState(nextState), 2000);
@@ -281,12 +296,22 @@ const App: React.FC = () => {
   const handleOnboardingLocationGrant = async () => {
     await requestLocationPermission();
     playSuccess();
-    setAppState(AppState.ONBOARDING_2);
+    markPermsRequested();
+    if (isOnboarding) setAppState(AppState.ONBOARDING_2);
+    else {
+      if (!userToken) setAppState(AppState.LOGIN);
+      else setAppState(AppState.HOME);
+    }
   };
 
   const handleOnboardingLocationDeny = () => {
     // Skip permission request, just move next
-    setAppState(AppState.ONBOARDING_2);
+    markPermsRequested();
+    if (isOnboarding) setAppState(AppState.ONBOARDING_2);
+    else {
+      if (!userToken) setAppState(AppState.LOGIN);
+      else setAppState(AppState.HOME);
+    }
   };
 
   const startHome = () => {
@@ -296,6 +321,7 @@ const App: React.FC = () => {
     }
     setOnboardingCompleted();
     setIsOnboarding(false);
+    markPermsRequested();
     if (!userToken) {
       setAppState(AppState.LOGIN);
     } else {
@@ -538,8 +564,8 @@ const App: React.FC = () => {
               gradientDirection={gradientDirection}
             />
             <CameraPermissionPage
-              onPermissionGrant={isOnboarding ? handleOnboardingCameraGrant : handleRetryCameraGrant}
-              onPermissionDeny={isOnboarding ? handleOnboardingCameraDeny : handleRetryCameraDeny}
+              onPermissionGrant={handleOnboardingCameraGrant}
+              onPermissionDeny={handleOnboardingCameraDeny}
             />
           </>
         );
@@ -735,6 +761,7 @@ const App: React.FC = () => {
         isOpen={isDrawerOpen}
         onRequestPermissions={() => {
           setIsDrawerOpen(false);
+          setIsOnboarding(true);
           setAppState(AppState.PERMISSION);
         }}
         onClose={() => setIsDrawerOpen(false)}
