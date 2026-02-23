@@ -171,44 +171,75 @@ export const useAiraMedia = (
     };
 
 
-    // --- Vision Capture (FPS) ---
-    const captureFrame = useCallback((stream: MediaStream, type: "camera_frame" | "screen_frame") => {
-        const video = document.createElement("video");
-        video.srcObject = stream;
-        video.play().catch(() => { });
+    // --- Vision Persistent Elements ---
+    const cameraVideoRef = useRef<HTMLVideoElement | null>(null);
+    const screenVideoRef = useRef<HTMLVideoElement | null>(null);
 
-        video.onloadedmetadata = () => {
-            const canvas = document.createElement("canvas");
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext("2d");
-            if (ctx) {
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                let base64Jpeg = canvas.toDataURL("image/jpeg", 0.8);
-                const cleanBase64 = base64Jpeg.replace(/^data:image\/[a-z]+;base64,/, "");
-                airaSocketService.sendVisionFrame(type, cleanBase64);
-
-                // Memory Leak GC Hint (From Backend suggestion)
-                base64Jpeg = "";
+    useEffect(() => {
+        if (cameraStream) {
+            const video = document.createElement("video");
+            video.srcObject = cameraStream;
+            video.muted = true;
+            video.playsInline = true;
+            video.play().catch(e => console.warn("Camera fallback auto-play failed", e));
+            cameraVideoRef.current = video;
+        } else {
+            if (cameraVideoRef.current) {
+                cameraVideoRef.current.pause();
+                cameraVideoRef.current.srcObject = null;
+                cameraVideoRef.current = null;
             }
-            // cleanup memory
-            video.pause();
-            video.srcObject = null;
-            video.remove();
-        };
+        }
+    }, [cameraStream]);
+
+    useEffect(() => {
+        if (screenStream) {
+            const video = document.createElement("video");
+            video.srcObject = screenStream;
+            video.muted = true;
+            video.playsInline = true;
+            video.play().catch(e => console.warn("Screen fallback auto-play failed", e));
+            screenVideoRef.current = video;
+        } else {
+            if (screenVideoRef.current) {
+                screenVideoRef.current.pause();
+                screenVideoRef.current.srcObject = null;
+                screenVideoRef.current = null;
+            }
+        }
+    }, [screenStream]);
+
+    // --- Vision Capture (FPS) ---
+    const captureFrame = useCallback((type: "camera_frame" | "screen_frame") => {
+        const video = type === "camera_frame" ? cameraVideoRef.current : screenVideoRef.current;
+        if (!video || video.videoWidth === 0 || video.videoHeight === 0) return;
+
+        const canvas = document.createElement("canvas");
+        // Maintain 640px width scaling to save bandwidth, like backend temp_front did
+        canvas.width = 640;
+        canvas.height = Math.max(360, Math.floor((640 * video.videoHeight) / video.videoWidth));
+        const ctx = canvas.getContext("2d");
+
+        if (ctx) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            let base64Jpeg = canvas.toDataURL("image/jpeg", 0.55); // compressed JPEG
+            const cleanBase64 = base64Jpeg.replace(/^data:image\/[a-z]+;base64,/, "");
+            airaSocketService.sendVisionFrame(type, cleanBase64);
+            base64Jpeg = ""; // GC Hint
+        }
     }, []);
 
     useEffect(() => {
         if (isCameraOn && cameraStream) {
             airaSocketService.sendCameraState(true);
             visionIntervalRef.current = setInterval(() => {
-                captureFrame(cameraStream, "camera_frame");
-            }, 1000); // 1 FPS
+                captureFrame("camera_frame");
+            }, 1200); // Send every 1.2s to match old working backend limits
         } else if (isScreenSharing && screenStream) {
             airaSocketService.sendCameraState(true);
             visionIntervalRef.current = setInterval(() => {
-                captureFrame(screenStream, "screen_frame");
-            }, 1000);
+                captureFrame("screen_frame");
+            }, 1200);
         } else {
             if (visionIntervalRef.current) {
                 clearInterval(visionIntervalRef.current);

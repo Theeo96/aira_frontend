@@ -124,9 +124,12 @@ class AiraSocketService {
 
     public sendVisionFrame(type: "camera_frame" | "screen_frame", base64Jpeg: string) {
         if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+            // Both camera and screen must map to camera_snapshot_base64 
+            // because backend vision_service only listens and records snapshots via this key.
             const payload = {
-                type: type,
-                image_b64: base64Jpeg,
+                type: "camera_snapshot_base64",
+                data: base64Jpeg,
+                mime_type: "image/jpeg"
             };
             this.socket.send(JSON.stringify(payload));
         }
