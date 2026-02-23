@@ -209,6 +209,34 @@ const App: React.FC = () => {
     localStorage.setItem('startSoundOption', startSoundOption);
   }, [startSoundOption]);
 
+  // Handle Periodic Location Updates
+  useEffect(() => {
+    if (!userToken) return;
+
+    const sendLocation = () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            airaSocketService.sendLocationUpdate(position.coords.latitude, position.coords.longitude);
+          },
+          (error) => {
+            console.warn("Failed to get location for periodic update (Permission might be denied or unavailable):", error.message);
+          }
+        );
+      }
+    };
+
+    // Initial send after a brief delay to ensure socket is likely connected
+    const initialTimer = setTimeout(sendLocation, 2000);
+    // Recurring update every 60 seconds
+    const interval = setInterval(sendLocation, 60000);
+
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(interval);
+    };
+  }, [userToken]);
+
   // Handle WebSocket Media Connection globally
   useAiraMedia(
     isListening,

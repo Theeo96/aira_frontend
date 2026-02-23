@@ -131,6 +131,27 @@ class AiraSocketService {
             this.socket.send(JSON.stringify(payload));
         }
     }
+
+    public sendCameraState(enabled: boolean) {
+        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+            const payload = {
+                type: "camera_state",
+                enabled: enabled,
+            };
+            this.socket.send(JSON.stringify(payload));
+        }
+    }
+
+    public sendLocationUpdate(lat: number, lng: number) {
+        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+            const payload = {
+                type: "location_update",
+                lat: lat,
+                lng: lng,
+            };
+            this.socket.send(JSON.stringify(payload));
+        }
+    }
 }
 
 export const airaSocketService = new AiraSocketService();
