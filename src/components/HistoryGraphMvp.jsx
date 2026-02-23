@@ -1375,22 +1375,22 @@ function buildGlobeLayout(data, filters) {
   const memoryNodes = [...memVisible]
     .sort((a, b) => String(a.key).localeCompare(String(b.key)))
     .map((m, idx, arr) => {
-    // Place memories on a near-uniform spherical shell.
-    const n = Math.max(1, arr.length);
-    const y = 1 - (2 * (idx + 0.5)) / n;
-    const ring = Math.sqrt(Math.max(0, 1 - y * y));
-    const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-    const theta = idx * goldenAngle + hash01(m.key) * 0.35;
+      // Place memories on a near-uniform spherical shell.
+      const n = Math.max(1, arr.length);
+      const y = 1 - (2 * (idx + 0.5)) / n;
+      const ring = Math.sqrt(Math.max(0, 1 - y * y));
+      const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+      const theta = idx * goldenAngle + hash01(m.key) * 0.35;
 
-    const v = new THREE.Vector3(
-      Math.cos(theta) * ring,
-      y,
-      Math.sin(theta) * ring
-    ).multiplyScalar(R_SURF);
+      const v = new THREE.Vector3(
+        Math.cos(theta) * ring,
+        y,
+        Math.sin(theta) * ring
+      ).multiplyScalar(R_SURF);
 
-    // size variety (use provided size if exists, else light variance)
-    const baseSize = Number.isFinite(m.size) ? Number(m.size) : 5;
-    const size = clamp(baseSize * (0.85 + (hash01(m.key) * 0.6)), 2.2, 8.5);
+      // size variety (use provided size if exists, else light variance)
+      const baseSize = Number.isFinite(m.size) ? Number(m.size) : 5;
+      const size = clamp(baseSize * (0.85 + (hash01(m.key) * 0.6)), 2.2, 8.5);
 
       return {
         key: m.key,
@@ -1830,7 +1830,7 @@ function GraphEvents({ onSelect }) {
   return null;
 }
 
-export default function App({ onOpenHistory } = {}) {
+export default function App({ onOpenHistory, useMockData } = {}) {
   const [data, setData] = useState(null);
   const [filters, setFilters] = useState({ emotion: "ALL", relation: "ALL" });
   const [expandedClusters, setExpandedClusters] = useState(() => new Set());
@@ -2005,23 +2005,26 @@ export default function App({ onOpenHistory } = {}) {
 
   useEffect(() => {
     const loadGraphData = async () => {
-      const paths = ["/graph_with_ts.json", "/graph.json"];
+      const paths = useMockData
+        ? ["/graph_with_ts.json", "/graph.json"]
+        : [`https://thimblelike-nonopprobrious-lannie.ngrok-free.dev/api/memory?token=${encodeURIComponent(localStorage.getItem('aira_user_token'))}`];
+
       for (const path of paths) {
         try {
-          const r = await fetch(path);
+          const r = await fetch(path, { cache: "no-store" });
           if (!r.ok) continue;
           const json = await r.json();
-          setData(json);
+          setData(useMockData ? json : json.data); // API response might wrap data in .data
           return;
         } catch {
           // try next candidate
         }
       }
-      console.error("Failed to load graph data from /graph_with_ts.json or /graph.json");
+      console.error("Failed to load graph data");
     };
 
     loadGraphData();
-  }, []);
+  }, [useMockData]);
 
   useEffect(() => {
     const onResize = () => {
@@ -2052,9 +2055,9 @@ export default function App({ onOpenHistory } = {}) {
   }, [data]);
 
   const graph = useMemo(() => {
-  if (!data) return null;
-  if (layoutMode === "globe") return null;
-  return buildGraphology(data, filters, layoutMode, { expandedClusters });
+    if (!data) return null;
+    if (layoutMode === "globe") return null;
+    return buildGraphology(data, filters, layoutMode, { expandedClusters });
   }, [data, filters, layoutMode, expandedClusters]);
 
   const [recentDays] = useState(7);
@@ -2226,9 +2229,9 @@ export default function App({ onOpenHistory } = {}) {
   if (!data) return <div style={{ padding: 16, color: textMain, background: appBg, minHeight: "100vh" }}>Loading graph...</div>;
 
   return (
-  <div style={{ position: "relative", height: "100%", background: appBg, color: textMain }}>
-  <style>
-    {`@keyframes galaxyTwinkle {
+    <div style={{ position: "relative", height: "100%", background: appBg, color: textMain }}>
+      <style>
+        {`@keyframes galaxyTwinkle {
       0% { opacity: 0.22; }
       50% { opacity: 0.42; }
       100% { opacity: 0.26; }
@@ -2238,992 +2241,992 @@ export default function App({ onOpenHistory } = {}) {
       50% { transform: translate3d(1.2%, -1.1%, 0) scale(1.04); opacity: 0.58; }
       100% { transform: translate3d(-1.5%, 0.8%, 0) scale(1); opacity: 0.46; }
     }`}
-  </style>
-  <div
-    style={{
-      display: isMobile ? "block" : "grid",
-      gridTemplateColumns: isMobile ? undefined : "280px minmax(0, 1fr) 360px",
-      height: "100%",
-      position: "relative",
-      background: appBg,
-      color: textMain,
-      transition: "filter 160ms ease, opacity 160ms ease",
-      filter: isReportOpen ? "saturate(0.9)" : "none",
-    }}
-  >
-    {isMobile && (
+      </style>
       <div
         style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: 52,
-          zIndex: 8,
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr 1fr",
-          gap: 8,
-          padding: 8,
-          borderTop: `1px solid ${panelBorder}`,
-          background: isDarkMode ? "rgba(2, 6, 23, 0.92)" : "rgba(248, 250, 252, 0.94)",
-          backdropFilter: "blur(4px)",
+          display: isMobile ? "block" : "grid",
+          gridTemplateColumns: isMobile ? undefined : "280px minmax(0, 1fr) 360px",
+          height: "100%",
+          position: "relative",
+          background: appBg,
+          color: textMain,
+          transition: "filter 160ms ease, opacity 160ms ease",
+          filter: isReportOpen ? "saturate(0.9)" : "none",
         }}
       >
-        {[
-          { id: "filters", label: "Filters" },
-          { id: "graph", label: "Graph" },
-          { id: "evidence", label: "Evidence" },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setMobilePane(tab.id)}
-            style={{
-              borderRadius: 8,
-              border: mobilePane === tab.id
-                ? (isDarkMode ? "1px solid #38bdf8" : "1px solid #0ea5e9")
-                : (isDarkMode ? "1px solid #334155" : "1px solid #cbd5e1"),
-              background: mobilePane === tab.id
-                ? (isDarkMode ? "#0b2540" : "#e0f2fe")
-                : (isDarkMode ? "#111827" : "#f8fafc"),
-              color: textMain,
-              fontSize: 12,
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-    )}
-    {/* LEFT: Filters */}
-    <div
-      style={{
-        padding: 16,
-        borderRight: `1px solid ${panelBorder}`,
-        background: panelBg,
-        boxShadow: panelShadow,
-        zIndex: 2,
-        ...(isMobile
-          ? {
-            position: "absolute",
-            left: 10,
-            right: 10,
-            bottom: 60,
-            maxHeight: "62vh",
-            borderRadius: "16px 16px 12px 12px",
-            borderRight: "none",
-            display: mobilePane === "filters" ? "block" : "none",
-            zIndex: 7,
-            overflow: "auto",
-            boxShadow: "0 18px 42px rgba(90, 68, 38, 0.2)",
-          }
-          : {}),
-      }}
-    >
-      <div style={{ fontWeight: 700, marginBottom: 12 }}>Filters</div>
-      <div style={{ marginBottom: 12 }}>
-        <button
-          type="button"
-          onClick={resetToHomeView}
-          style={{
-            width: "100%",
-            padding: "8px 10px",
-            borderRadius: 8,
-            border: isDarkMode ? "1px solid #334155" : "1px solid #cbd5e1",
-            background: isDarkMode ? "#0b2540" : "#e0f2fe",
-            color: textMain,
-            cursor: "pointer",
-            fontWeight: 700,
-          }}
-        >
-          처음화면으로
-        </button>
-      </div>
-
-      <div style={{ marginBottom: 6, fontSize: 12, color: textSub }}>
-        어떤 감정과 관계를 볼까요?
-      </div>
-      <div style={{ marginBottom: 10 }}>
-        <div style={{ fontSize: 12, marginBottom: 6, color: textSub }}>감정</div>
-        {isMobile ? (
+        {isMobile && (
           <div
-            style={{
-              display: "flex",
-              gap: 8,
-              overflowX: "auto",
-              paddingBottom: 4,
-              scrollSnapType: "x proximity",
-            }}
-          >
-            {["ALL", ...emotions].map((e) => {
-              const value = e === "ALL" ? "ALL" : e;
-              const active = filters.emotion === value;
-              const label = e === "ALL" ? "전체" : emotionLabelOnly(e);
-              return (
-                <button
-                  key={`emo_chip_${value}`}
-                  type="button"
-                  onClick={() => {
-                    const nextEmotion = value;
-                    handleSelect(null);
-                    if (nextEmotion !== "ALL") {
-                      const clusterKey = resolveClusterKeyFromEmotionLabel(nextEmotion);
-                      if (clusterKey) {
-                        setExpandedClusters((prev) => {
-                          const nextSet = new Set(prev);
-                          nextSet.add(clusterKey);
-                          return nextSet;
-                        });
-                      }
-                    }
-                    setFilters((f) => ({ ...f, emotion: nextEmotion }));
-                  }}
-                  style={{
-                    flex: "0 0 auto",
-                    scrollSnapAlign: "start",
-                    borderRadius: 999,
-                    border: active ? "none" : "1px solid #cbd5e1",
-                    background: active
-                      ? "linear-gradient(135deg, #ffd8b3 0%, #ffcc99 100%)"
-                      : "rgba(255,255,255,0.72)",
-                    color: active ? "#7c2d12" : "#334155",
-                    padding: "7px 12px",
-                    fontSize: 12,
-                    fontWeight: 700,
-                    whiteSpace: "nowrap",
-                    boxShadow: active ? "0 6px 14px rgba(251, 146, 60, 0.24)" : "none",
-                    cursor: "pointer",
-                  }}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          <select
-            style={selectStyle}
-            value={filters.emotion}
-            onChange={(e) => {
-              const nextEmotion = e.target.value;
-              handleSelect(null);
-              if (nextEmotion !== "ALL") {
-                const clusterKey = resolveClusterKeyFromEmotionLabel(nextEmotion);
-                if (clusterKey) {
-                  setExpandedClusters((prev) => {
-                    const nextSet = new Set(prev);
-                    nextSet.add(clusterKey);
-                    return nextSet;
-                  });
-                }
-              }
-              setFilters((f) => ({ ...f, emotion: nextEmotion }));
-            }}
-          >
-            <option value="ALL">ALL</option>
-            {emotions.map((e) => (
-              <option key={e} value={e}>
-                {emotionLabelOnly(e)}
-              </option>
-            ))}
-          </select>
-        )}
-      </div>
-
-      <div style={{ marginBottom: 10 }}>
-        <div style={{ fontSize: 12, marginBottom: 6, color: textSub }}>관계</div>
-        {isMobile ? (
-          <div
-            style={{
-              display: "flex",
-              gap: 8,
-              overflowX: "auto",
-              paddingBottom: 4,
-              scrollSnapType: "x proximity",
-            }}
-          >
-            {["ALL", ...relations].map((r) => {
-              const value = r === "ALL" ? "ALL" : r;
-              const active = filters.relation === value;
-              const label = r === "ALL" ? "전체" : r;
-              return (
-                <button
-                  key={`rel_chip_${value}`}
-                  type="button"
-                  onClick={() => {
-                    handleSelect(null);
-                    setFilters((f) => ({ ...f, relation: value }));
-                  }}
-                  style={{
-                    flex: "0 0 auto",
-                    scrollSnapAlign: "start",
-                    borderRadius: 999,
-                    border: active ? "none" : "1px solid #cbd5e1",
-                    background: active
-                      ? "linear-gradient(135deg, #ffd8b3 0%, #ffcc99 100%)"
-                      : "rgba(255,255,255,0.72)",
-                    color: active ? "#7c2d12" : "#334155",
-                    padding: "7px 12px",
-                    fontSize: 12,
-                    fontWeight: 700,
-                    whiteSpace: "nowrap",
-                    boxShadow: active ? "0 6px 14px rgba(251, 146, 60, 0.24)" : "none",
-                    cursor: "pointer",
-                  }}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          <select
-            style={selectStyle}
-            value={filters.relation}
-            onChange={(e) => {
-              handleSelect(null);
-              setFilters((f) => ({ ...f, relation: e.target.value }));
-            }}
-          >
-            <option value="ALL">ALL</option>
-            {relations.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
-          </select>
-        )}
-      </div>
-
-      <div style={{ marginTop: 12 }}>
-        <div style={{ fontSize: 12, marginBottom: 6, color: textSub }}>별빛 강조하기</div>
-        <select
-          style={selectStyle}
-          value={intensityMetric}
-          onChange={(e) => setIntensityMetric(e.target.value)}
-        >
-          <option value="count">빈도순</option>
-          <option value="score">강도순</option>
-        </select>
-      </div>
-
-      <div style={{ fontSize: 12, color: textSub, marginTop: 16 }}>
-        Nodes: {graph?.order ?? 0}
-        <br />
-        Edges: {graph?.size ?? 0}
-      </div>
-
-      <hr style={{ margin: "16px 0", borderColor: panelBorder }} />
-      <div style={{ fontSize: 12, color: textSub }}>Tip: 상위 감정군 노드를 클릭하면 하위 감정(E01~E32)이 펼쳐집니다.</div>
-      <div style={{ fontSize: 12, color: textSub, marginTop: 4 }}>Tip: 하위 감정 노드를 클릭하면 해당 감정의 기억 노드만 표시됩니다.</div>
-    </div>
-
-    {/* CENTER: Graph */}
-    <div
-      style={{
-        minHeight: 0,
-        minWidth: 0,
-        background: graphBg,
-        position: "relative",
-        ...(isMobile
-          ? {
-            position: "absolute",
-            inset: "0 0 52px 0",
-            display: mobilePane === "evidence" ? "none" : "block",
-          }
-          : {}),
-      }}
-    >
-      {layoutMode === "galaxy" && (
-        <>
-          <div
-            aria-hidden
             style={{
               position: "absolute",
-              inset: 0,
-              pointerEvents: "none",
-              zIndex: 0,
-              backgroundImage: galaxyStarsLayer,
-              opacity: 0.62,
-            }}
-          />
-          <div
-            aria-hidden
-            style={{
-              position: "absolute",
-              inset: 0,
-              pointerEvents: "none",
-              zIndex: 0,
-              backgroundImage: galaxyMistLayer,
-              opacity: 0.5,
-              filter: "blur(28px)",
-              animation: "watercolorFloat 11s ease-in-out infinite",
-            }}
-          />
-          <div
-            aria-hidden
-            style={{
-              position: "absolute",
-              inset: 0,
-              pointerEvents: "none",
-              zIndex: 0,
-              backgroundImage: "repeating-linear-gradient(0deg, rgba(148, 163, 184, 0.035), rgba(148, 163, 184, 0.035) 1px, transparent 1px, transparent 24px)",
-              opacity: 0.32,
-              animation: "galaxyTwinkle 6.8s ease-in-out infinite",
-            }}
-          />
-        </>
-      )}
-      {onOpenHistory && (
-        <button
-          type="button"
-          onClick={() => onOpenHistory(openHistoryPayload ?? { historyId: "" })}
-          style={{
-            position: "absolute",
-            top: 12,
-            left: 12,
-            zIndex: 3,
-            padding: "8px 14px",
-            borderRadius: 999,
-            border: "1px solid #7dd3fc",
-            background: "#e0f2fe",
-            color: "#0c4a6e",
-            backdropFilter: "blur(2px)",
-            cursor: "pointer",
-            fontSize: 12,
-            fontWeight: 700,
-            boxShadow:
-              "0 8px 24px rgba(14, 116, 144, 0.22), inset 0 1px 0 rgba(255,255,255,0.7)",
-            transition: "transform 120ms ease, filter 120ms ease",
-          }}
-        >
-          대화전문 바로가기
-        </button>
-      )}
-      {alerts.length > 0 && (
-        <div
-          style={{
-            position: "absolute",
-            left: 12,
-            right: 12,
-            bottom: isMobile ? 62 : 14,
-            zIndex: 3,
-            margin: "0 auto",
-            maxWidth: 560,
-            borderRadius: 12,
-            background: "rgba(255, 255, 255, 0.9)",
-            border: "1px solid rgba(226, 232, 240, 0.8)",
-            boxShadow: "0 10px 26px rgba(120, 90, 40, 0.16)",
-            backdropFilter: "blur(6px)",
-            padding: "10px 12px",
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: "#0f172a" }}>
-              최근 {recentDays}일 주요 감정 변화
-            </div>
-            <div style={{ fontSize: 11, color: "#64748b" }}>
-              비교: 최근 {recentDays}일 vs 이전 {baselineDays}일
-            </div>
-          </div>
-          <div style={{ marginTop: 8, display: "grid", gap: 6 }}>
-            {alerts.slice(0, 3).map((a) => {
-              const metric = a.metric;
-              const deltaRaw = metric ? ((Number(metric.recent) || 0) - (Number(metric.baseline) || 0)) : 0;
-              const deltaPp = metric?.kind === "percent" ? deltaRaw * 100 : deltaRaw;
-              const tempStyle = reportTemperaturePalette(deltaPp);
-              const arrow = deltaRaw > 0 ? "▲" : (deltaRaw < 0 ? "▼" : "-");
-              return (
-                <div
-                  key={`graph_alert_${a.id}`}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr auto",
-                    alignItems: "center",
-                    gap: 8,
-                    fontSize: 12,
-                  }}
-                >
-                  <div style={{ color: "#0f172a", fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {getAlertEmoji(a)} {a.title}
-                  </div>
-                  <div style={{ color: tempStyle.textColor, fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
-                    {formatAlertDeltaText(metric)} {arrow}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-      <div style={{ position: "relative", zIndex: 1, height: "100%" }}>
-        {(!isMobile || mobilePane === "graph") && (layoutMode === "globe" ? (
-          <ThreeGlobeView
-            data={data}
-            filters={filters}
-            isDarkMode={isDarkMode}
-            selectedKey={selected?.key ?? null}
-            onSelect={(node) => {
-              // Three view에서 넘어온 node를 선택 상태로 반영
-              setSelected(node);
-              setSecondarySelectedId(null);
-            }}
-          />
-        ) : (
-          <SigmaContainer
-            style={{ height: "100%", width: "100%", background: "transparent" }}
-            graph={graph}
-            settings={{
-              labelColor: { color: isDarkMode ? "#f1f5f9" : "#0f172a" },
-              labelSize: 14,
-              labelWeight: "600",
-              isDarkMode,
-              defaultDrawNodeLabel: drawReadableNodeLabel,
-            }}
-          >
-            <GraphEvents onSelect={handleSelect} />
-            <SelectionReducers
-              selectedId={selected?.key ?? null}
-              secondarySelectedId={secondarySelectedId}
-              showEdgesOnHover={showEdgesOnHover}
-              isDarkMode={isDarkMode}
-            />
-            <EmotionCategoryGlow metricMode={intensityMetric} isDarkMode={isDarkMode} />
-          </SigmaContainer>
-        ))}
-      </div>
-    </div>
-
-    {/* RIGHT: Evidence */}
-    <div
-      style={{
-        padding: 16,
-        borderLeft: `1px solid ${panelBorder}`,
-        overflow: "auto",
-        background: panelBg,
-        boxShadow: panelShadow,
-        zIndex: 2,
-        ...(isMobile
-          ? {
-            position: "absolute",
-            inset: "0 0 52px 0",
-            borderLeft: "none",
-            display: mobilePane === "evidence" ? "block" : "none",
-            zIndex: 6,
-          }
-          : {}),
-      }}
-    >
-      <div style={{ fontWeight: 700, marginBottom: 12 }}>Evidence</div>
-
-      {selected?.ts && (
-       <div style={{ fontSize: 12, color: "#666", marginBottom: 6 }}>
-        time: {String(selected.ts)}
-        </div>
-      )}
-
-
-      {!selected ? (
-        <div style={{ fontSize: 13, color: textSub }}>노드를 선택해 주세요.</div>
-      ) : selected.nodeType === "memory" ? (
-        <>
-          <div style={{ fontSize: 12, color: textSub, marginBottom: 8 }}>
-            emotion: {selected.emotion} / relation: {selected.relation}
-          </div>
-          {onOpenHistory && openHistoryPayload && (
-            <button
-              type="button"
-              onClick={() => onOpenHistory(openHistoryPayload)}
-              style={{
-                marginBottom: 8,
-                width: "100%",
-                padding: "6px 10px",
-                borderRadius: 8,
-                border: "1px solid #7dd3fc",
-                background: "#e0f2fe",
-                color: "#0c4a6e",
-                fontWeight: 700,
-                cursor: "pointer",
-                fontSize: 12,
-              }}
-            >
-              대화내역 보기
-            </button>
-          )}
-          <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.5, fontSize: 14 }}>
-            {selected.full_text}
-          </div>
-        </>
-      ) : (
-        <div style={{ fontSize: 13, color: textSub }}>
-          {onOpenHistory && openHistoryPayload && (
-            <button
-              type="button"
-              onClick={() => onOpenHistory(openHistoryPayload)}
-              style={{
-                marginBottom: 8,
-                width: "100%",
-                padding: "6px 10px",
-                borderRadius: 8,
-                border: "1px solid #7dd3fc",
-                background: "#e0f2fe",
-                color: "#0c4a6e",
-                fontWeight: 700,
-                cursor: "pointer",
-                fontSize: 12,
-              }}
-            >
-              대화내역 보기
-            </button>
-          )}
-          <div>
-            <b>type</b>: {selected.nodeType}
-          </div>
-          <div>
-            <b>label</b>: {selected.label}
-          </div>
-          <div style={{ marginTop: 8 }}>선택한 노드와 연결된 관계만 표시됩니다.</div>
-        </div>
-      )}
-      <div style={{ marginTop: 12 }}>
-        <button
-          type="button"
-          onClick={() => setIsReportOpen(true)}
-          style={{
-            width: "100%",
-            padding: "8px 10px",
-            borderRadius: 8,
-            border: isDarkMode ? "1px solid #334155" : "1px solid #cbd5e1",
-            background: isDarkMode ? "#111827" : "#f8fafc",
-            color: textMain,
-            cursor: "pointer",
-            fontSize: 12,
-            fontWeight: 700,
-          }}
-        >
-          📄 주간 리포트 보기
-        </button>
-      </div>
-    </div>
-
-    {isReportOpen && (
-      <div
-        onClick={() => {
-          setIsReportOpen(false);
-          setDeepDiveDetail(null);
-        }}
-        style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: 20,
-          background: "rgba(2, 6, 23, 0.36)",
-          backdropFilter: "blur(5px)",
-          display: "grid",
-          placeItems: "center",
-          padding: 20,
-        }}
-      >
-        <div
-          role="dialog"
-          aria-modal="true"
-          onClick={(e) => e.stopPropagation()}
-          style={{
-            width: "min(880px, calc(100vw - 28px))",
-            maxHeight: "calc(100vh - 40px)",
-            overflow: "auto",
-            borderRadius: 14,
-            border: "1px solid #eadfce",
-            boxShadow: "0 28px 72px rgba(15, 23, 42, 0.25)",
-            background: "linear-gradient(180deg, #f9f2e7 0%, #f4ebdd 100%)",
-            color: "#0f172a",
-            padding: 20,
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-            <div style={{ fontWeight: 800, fontSize: 20 }}>주간 리포트</div>
-            <button
-              type="button"
-              onClick={() => {
-                setIsReportOpen(false);
-                setDeepDiveDetail(null);
-              }}
-              style={{
-                padding: "6px 10px",
-                borderRadius: 8,
-                border: "1px solid #cbd5e1",
-                background: "#ffffff",
-                color: "#0f172a",
-                cursor: "pointer",
-                fontWeight: 700,
-              }}
-            >
-              닫기
-            </button>
-          </div>
-          <div style={{ fontSize: 13, color: "#334155", marginBottom: 14 }}>
-            감정의 바다에서 특히 두드러진 이번 구간을 핵심 중심으로 요약했습니다.
-          </div>
-          {(() => {
-            const briefing = buildTopNarrativeSummary(alerts, recentDays);
-            return (
-              <div style={{ marginBottom: 14 }}>
-                <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 8 }}>AI 감정 브리핑</div>
-                <div
-                  style={{
-                    position: "relative",
-                    overflow: "hidden",
-                    borderRadius: 12,
-                    border: "1px solid rgba(255, 255, 255, 0.55)",
-                    background: "linear-gradient(130deg, rgba(255, 204, 153, 0.34) 0%, rgba(103, 232, 249, 0.28) 55%, rgba(255, 204, 153, 0.2) 100%)",
-                    boxShadow: "0 14px 34px rgba(14, 116, 144, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.75)",
-                    padding: "14px 14px 12px",
-                  }}
-                >
-                  <div
-                    aria-hidden="true"
-                    style={{
-                      position: "absolute",
-                      inset: -28,
-                      background:
-                        "radial-gradient(60% 80% at 15% 20%, rgba(255, 204, 153, 0.5) 0%, rgba(255, 204, 153, 0) 70%), radial-gradient(70% 90% at 82% 68%, rgba(103, 232, 249, 0.52) 0%, rgba(103, 232, 249, 0) 72%)",
-                      filter: "blur(22px)",
-                      transform: "translateZ(0)",
-                    }}
-                  />
-                  <div
-                    style={{
-                      position: "relative",
-                      borderRadius: 10,
-                      border: "1px solid rgba(255, 255, 255, 0.58)",
-                      background: "linear-gradient(180deg, rgba(255,255,255,0.66) 0%, rgba(255,255,255,0.42) 100%)",
-                      backdropFilter: "blur(10px) saturate(130%)",
-                      WebkitBackdropFilter: "blur(10px) saturate(130%)",
-                      padding: "10px 10px 9px",
-                    }}
-                  >
-                    <div style={{ fontSize: 30, lineHeight: 1, marginBottom: 8 }}>{briefing.emoji}</div>
-                    <div style={{ fontSize: 19, fontWeight: 800, color: "#0f172a", lineHeight: 1.42 }}>
-                      "{briefing.message}"
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
-
-          <div style={{ fontWeight: 700, marginBottom: 8 }}>즉시 감정 알림</div>
-          <div style={{ fontSize: 12, color: "#475569", marginBottom: 8 }}>
-            가장 큰 변화부터 빠르게 확인하세요. 카드를 좌우로 넘겨볼 수 있습니다.
-          </div>
-          <div
-            style={{
-              display: "grid",
-              gridAutoFlow: "column",
-              gridAutoColumns: "minmax(220px, 72%)",
-              gap: 10,
-              overflowX: "auto",
-              paddingBottom: 6,
-              marginBottom: 12,
-              scrollSnapType: "x mandatory",
-            }}
-          >
-            {alerts.slice(0, 6).map((a) => {
-              const deltaRaw = Number(a?.metric?.delta ?? 0);
-              const deltaPp = a?.metric?.kind === "percent" ? deltaRaw * 100 : deltaRaw;
-              const tempStyle = reportTemperaturePalette(deltaPp);
-              const deltaColor = tempStyle.textColor;
-              const tagBg = tempStyle.tone === "warm"
-                ? "rgba(255, 204, 153, 0.32)"
-                : (tempStyle.tone === "cold" ? "rgba(103, 232, 249, 0.30)" : "rgba(226, 232, 240, 0.66)");
-              const tagText = tempStyle.tone === "warm"
-                ? REPORT_TEMP_COLORS.warmText
-                : (tempStyle.tone === "cold" ? REPORT_TEMP_COLORS.coldText : "#475569");
-              const arrow = deltaPp > 0.01 ? "▲" : (deltaPp < -0.01 ? "▼" : "-");
-              const emotionName = emotionLabelOnly(a?.filters?.emotion ?? "감정");
-              const relationTags = a?.filters?.relation && a.filters.relation !== "ALL"
-                ? [String(a.filters.relation)]
-                : alerts
-                  .filter((x) =>
-                    x.type === "RELATION_BIAS" &&
-                    x?.filters?.emotion === a?.filters?.emotion &&
-                    x?.filters?.relation &&
-                    x.filters.relation !== "ALL"
-                  )
-                  .map((x) => String(x.filters.relation))
-                  .slice(0, 2);
-              const tags = relationTags.length > 0 ? relationTags : ["전체 맥락"];
-              return (
-                <div
-                  key={`quick_${a.id}`}
-                  style={{
-                    scrollSnapAlign: "start",
-                    borderRadius: 12,
-                    background: "#ffffff",
-                    padding: "12px 12px 10px",
-                    boxShadow: "0 10px 22px rgba(120, 90, 40, 0.10)",
-                  }}
-                >
-                  <div style={{ fontSize: 14, fontWeight: 800, color: "#0f172a", lineHeight: 1.35 }}>
-                    {getAlertEmoji(a)} {emotionName} {deltaPp > 0.01 ? "급증" : (deltaPp < -0.01 ? "감소" : "변화")}
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 6,
-                      fontSize: 24,
-                      fontWeight: 900,
-                      color: deltaColor,
-                      lineHeight: 1,
-                      fontVariantNumeric: "tabular-nums",
-                    }}
-                  >
-                    {deltaPp >= 0 ? "+" : ""}
-                    {deltaPp.toFixed(0)}% {arrow}
-                  </div>
-                  {tempStyle.tone !== "neutral" && (
-                    <div style={{ marginTop: 4, fontSize: 11, color: tempStyle.textColor, fontWeight: 700 }}>
-                      {tempStyle.tone === "warm" ? "현재 감정 온도가 높아졌어요" : "현재 감정 온도가 차분해졌어요"}
-                    </div>
-                  )}
-                  <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 6 }}>
-                    {tags.map((tag) => (
-                      <span
-                        key={`${a.id}_${tag}`}
-                        style={{
-                          fontSize: 11,
-                          color: tagText,
-                          background: tagBg,
-                          padding: "2px 8px",
-                          borderRadius: 999,
-                          fontWeight: 700,
-                        }}
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-            {alerts.length === 0 && (
-              <div
-                style={{
-                  borderRadius: 12,
-                  background: "#ffffff",
-                  padding: 12,
-                  fontSize: 12,
-                  color: "#475569",
-                  boxShadow: "0 10px 22px rgba(120, 90, 40, 0.09)",
-                }}
-              >
-                표본이 충분하지 않아 이번 주 즉시 감정 알림을 만들지 못했습니다.
-              </div>
-            )}
-          </div>
-
-          <div style={{ fontWeight: 700, marginBottom: 8 }}>보조 지표: 감정 변화 확산 (%)</div>
-          <div
-            style={{
-              borderRadius: 10,
-              background: "#ffffff",
-              padding: 12,
-              marginBottom: 8,
-              boxShadow: "0 10px 22px rgba(120, 90, 40, 0.10)",
-            }}
-          >
-            <div style={{ display: "grid", gap: 8 }}>
-              {(weeklyReport?.deltaEmotionRanking ?? []).slice(0, 6).map((item) => {
-                const deltaPp = Number(item.deltaPp) || 0;
-                const valueColor = reportTemperaturePalette(deltaPp).textColor;
-                return (
-                  <div
-                    key={`delta_rank_${item.emotion}`}
-                    style={{ display: "grid", gridTemplateColumns: "92px 1fr 58px", gap: 8, alignItems: "center" }}
-                  >
-                    <div style={{ fontSize: 12, fontWeight: 700, color: "#0f172a" }}>
-                      {emotionLabelOnly(item.emotion)}
-                    </div>
-                    <div
-                      style={{
-                        height: 30,
-                        borderRadius: 999,
-                        background: "linear-gradient(90deg, rgba(103, 232, 249, 0.12) 0%, rgba(255, 204, 153, 0.1) 100%)",
-                        border: "1px solid rgba(148, 163, 184, 0.22)",
-                        padding: "0 4px",
-                        overflow: "hidden",
-                      }}
-                    >
-                      <EmotionDeltaWave
-                        emotion={item.emotion}
-                        baselineRatio={item.baselineRatio}
-                        recentRatio={item.recentRatio}
-                        deltaPp={deltaPp}
-                      />
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 700,
-                        color: valueColor,
-                        textAlign: "right",
-                        fontVariantNumeric: "tabular-nums",
-                      }}
-                    >
-                      {deltaPp >= 0 ? "+" : ""}
-                      {deltaPp.toFixed(0)}%
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          <div style={{ fontSize: 12, color: "#475569", marginBottom: 12 }}>
-            비교: 최근 {recentDays}일 vs 이전 {baselineDays}일 · 표본: {weeklyReport?.recentN ?? 0}/{weeklyReport?.baseN ?? 0}
-          </div>
-
-          <div style={{ fontWeight: 700, marginBottom: 8 }}>관계 감정 딥다이브</div>
-          <div style={{ fontSize: 12, color: "#475569", marginBottom: 8 }}>
-            각 관계에서 어떤 감정 변화가 컸는지 빠르게 확인하세요.
-          </div>
-          <div style={{ display: "grid", gap: 8, marginBottom: 14 }}>
-            {(weeklyReport?.relationDeepDive ?? []).slice(0, 6).map((row) => (
-              <div
-                key={`deep_${row.relation}`}
-                style={{
-                  borderRadius: 10,
-                  background: "#ffffff",
-                  padding: "10px 10px 9px",
-                  boxShadow: "0 10px 22px rgba(120, 90, 40, 0.09)",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: "#0f172a" }}>
-                    {row.relation} {relationEmoji(row.relation)}
-                  </div>
-                  <div style={{ fontSize: 11, color: "#64748b" }}>총 {row.total}건</div>
-                </div>
-                <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 6 }}>
-                  {(row.items ?? []).map((item) => {
-                    const deltaPp = Number(item.deltaPp) || 0;
-                    const isUp = deltaPp >= 0;
-                    const tempStyle = reportTemperaturePalette(deltaPp);
-                    const tagColor = tempStyle.textColor;
-                    const bg = tempStyle.tone === "warm"
-                      ? "rgba(255, 204, 153, 0.34)"
-                      : (tempStyle.tone === "cold" ? "rgba(103, 232, 249, 0.30)" : "rgba(226, 232, 240, 0.66)");
-                    return (
-                      <button
-                        key={`deep_${row.relation}_${item.emotion}`}
-                        type="button"
-                        onClick={() => {
-                          setDeepDiveDetail({
-                            relation: row.relation,
-                            emotion: item.emotion,
-                            count: item.count,
-                            recentRatio: item.recentRatio,
-                            baselineRatio: item.baselineRatio,
-                            deltaRatio: item.deltaRatio,
-                          });
-                        }}
-                        style={{
-                          border: "none",
-                          background: bg,
-                          color: tagColor,
-                          borderRadius: 999,
-                          padding: "4px 10px",
-                          fontSize: 12,
-                          fontWeight: 800,
-                          cursor: "pointer",
-                        }}
-                      >
-                        {emotionLabelOnly(item.emotion)} {deltaPp >= 0 ? "+" : ""}
-                        {deltaPp.toFixed(0)}% {isUp ? "급증" : "감소"}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-            {(weeklyReport?.relationDeepDive ?? []).length === 0 && (
-              <div style={{ borderRadius: 10, background: "#ffffff", padding: 12, fontSize: 12, color: "#475569", boxShadow: "0 10px 22px rgba(120, 90, 40, 0.09)" }}>
-                최근 구간의 관계 감정 변화를 설명할 표본이 없습니다.
-              </div>
-            )}
-          </div>
-
-        </div>
-        {deepDiveDetail && (
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              position: "fixed",
+              bottom: 0,
               left: 0,
               right: 0,
-              bottom: 0,
-              zIndex: 30,
-              background: "#ffffff",
-              borderTopLeftRadius: 14,
-              borderTopRightRadius: 14,
-              boxShadow: "0 -12px 30px rgba(15, 23, 42, 0.24)",
-              borderTop: "1px solid #e2e8f0",
-              padding: "12px 14px 14px",
+              height: 52,
+              zIndex: 8,
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr 1fr",
+              gap: 8,
+              padding: 8,
+              borderTop: `1px solid ${panelBorder}`,
+              background: isDarkMode ? "rgba(2, 6, 23, 0.92)" : "rgba(248, 250, 252, 0.94)",
+              backdropFilter: "blur(4px)",
             }}
           >
-            <div style={{ width: 44, height: 4, borderRadius: 999, background: "#cbd5e1", margin: "0 auto 10px" }} />
-            <div style={{ fontSize: 14, fontWeight: 800, color: "#0f172a" }}>
-              {deepDiveDetail.relation} {relationEmoji(deepDiveDetail.relation)} · {emotionLabelOnly(deepDiveDetail.emotion)}
-            </div>
-            <div style={{ marginTop: 6, fontSize: 12, color: "#475569", lineHeight: 1.45 }}>
-              baseline {(deepDiveDetail.baselineRatio * 100).toFixed(0)}% · recent {(deepDiveDetail.recentRatio * 100).toFixed(0)}%
-              <br />
-              변화 {deepDiveDetail.deltaRatio >= 0 ? "+" : ""}
-              {(deepDiveDetail.deltaRatio * 100).toFixed(0)}% · 총 {deepDiveDetail.count}건
-            </div>
-            <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+            {[
+              { id: "filters", label: "Filters" },
+              { id: "graph", label: "Graph" },
+              { id: "evidence", label: "Evidence" },
+            ].map((tab) => (
               <button
+                key={tab.id}
                 type="button"
-                onClick={() => setDeepDiveDetail(null)}
+                onClick={() => setMobilePane(tab.id)}
                 style={{
-                  flex: 1,
-                  padding: "8px 10px",
                   borderRadius: 8,
-                  border: "1px solid #cbd5e1",
-                  background: "#ffffff",
-                  color: "#0f172a",
+                  border: mobilePane === tab.id
+                    ? (isDarkMode ? "1px solid #38bdf8" : "1px solid #0ea5e9")
+                    : (isDarkMode ? "1px solid #334155" : "1px solid #cbd5e1"),
+                  background: mobilePane === tab.id
+                    ? (isDarkMode ? "#0b2540" : "#e0f2fe")
+                    : (isDarkMode ? "#111827" : "#f8fafc"),
+                  color: textMain,
+                  fontSize: 12,
                   fontWeight: 700,
                   cursor: "pointer",
                 }}
               >
-                닫기
+                {tab.label}
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  openHeatmapCellInGraph(deepDiveDetail.relation, deepDiveDetail.emotion);
-                  setDeepDiveDetail(null);
-                }}
+            ))}
+          </div>
+        )}
+        {/* LEFT: Filters */}
+        <div
+          style={{
+            padding: 16,
+            borderRight: `1px solid ${panelBorder}`,
+            background: panelBg,
+            boxShadow: panelShadow,
+            zIndex: 2,
+            ...(isMobile
+              ? {
+                position: "absolute",
+                left: 10,
+                right: 10,
+                bottom: 60,
+                maxHeight: "62vh",
+                borderRadius: "16px 16px 12px 12px",
+                borderRight: "none",
+                display: mobilePane === "filters" ? "block" : "none",
+                zIndex: 7,
+                overflow: "auto",
+                boxShadow: "0 18px 42px rgba(90, 68, 38, 0.2)",
+              }
+              : {}),
+          }}
+        >
+          <div style={{ fontWeight: 700, marginBottom: 12 }}>Filters</div>
+          <div style={{ marginBottom: 12 }}>
+            <button
+              type="button"
+              onClick={resetToHomeView}
+              style={{
+                width: "100%",
+                padding: "8px 10px",
+                borderRadius: 8,
+                border: isDarkMode ? "1px solid #334155" : "1px solid #cbd5e1",
+                background: isDarkMode ? "#0b2540" : "#e0f2fe",
+                color: textMain,
+                cursor: "pointer",
+                fontWeight: 700,
+              }}
+            >
+              처음화면으로
+            </button>
+          </div>
+
+          <div style={{ marginBottom: 6, fontSize: 12, color: textSub }}>
+            어떤 감정과 관계를 볼까요?
+          </div>
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 12, marginBottom: 6, color: textSub }}>감정</div>
+            {isMobile ? (
+              <div
                 style={{
-                  flex: 1,
-                  padding: "8px 10px",
-                  borderRadius: 8,
-                  border: "1px solid #0ea5e9",
-                  background: "#e0f2fe",
-                  color: "#0c4a6e",
-                  fontWeight: 800,
-                  cursor: "pointer",
+                  display: "flex",
+                  gap: 8,
+                  overflowX: "auto",
+                  paddingBottom: 4,
+                  scrollSnapType: "x proximity",
                 }}
               >
-                그래프에서 보기
-              </button>
+                {["ALL", ...emotions].map((e) => {
+                  const value = e === "ALL" ? "ALL" : e;
+                  const active = filters.emotion === value;
+                  const label = e === "ALL" ? "전체" : emotionLabelOnly(e);
+                  return (
+                    <button
+                      key={`emo_chip_${value}`}
+                      type="button"
+                      onClick={() => {
+                        const nextEmotion = value;
+                        handleSelect(null);
+                        if (nextEmotion !== "ALL") {
+                          const clusterKey = resolveClusterKeyFromEmotionLabel(nextEmotion);
+                          if (clusterKey) {
+                            setExpandedClusters((prev) => {
+                              const nextSet = new Set(prev);
+                              nextSet.add(clusterKey);
+                              return nextSet;
+                            });
+                          }
+                        }
+                        setFilters((f) => ({ ...f, emotion: nextEmotion }));
+                      }}
+                      style={{
+                        flex: "0 0 auto",
+                        scrollSnapAlign: "start",
+                        borderRadius: 999,
+                        border: active ? "none" : "1px solid #cbd5e1",
+                        background: active
+                          ? "linear-gradient(135deg, #ffd8b3 0%, #ffcc99 100%)"
+                          : "rgba(255,255,255,0.72)",
+                        color: active ? "#7c2d12" : "#334155",
+                        padding: "7px 12px",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        whiteSpace: "nowrap",
+                        boxShadow: active ? "0 6px 14px rgba(251, 146, 60, 0.24)" : "none",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <select
+                style={selectStyle}
+                value={filters.emotion}
+                onChange={(e) => {
+                  const nextEmotion = e.target.value;
+                  handleSelect(null);
+                  if (nextEmotion !== "ALL") {
+                    const clusterKey = resolveClusterKeyFromEmotionLabel(nextEmotion);
+                    if (clusterKey) {
+                      setExpandedClusters((prev) => {
+                        const nextSet = new Set(prev);
+                        nextSet.add(clusterKey);
+                        return nextSet;
+                      });
+                    }
+                  }
+                  setFilters((f) => ({ ...f, emotion: nextEmotion }));
+                }}
+              >
+                <option value="ALL">ALL</option>
+                {emotions.map((e) => (
+                  <option key={e} value={e}>
+                    {emotionLabelOnly(e)}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 12, marginBottom: 6, color: textSub }}>관계</div>
+            {isMobile ? (
+              <div
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  overflowX: "auto",
+                  paddingBottom: 4,
+                  scrollSnapType: "x proximity",
+                }}
+              >
+                {["ALL", ...relations].map((r) => {
+                  const value = r === "ALL" ? "ALL" : r;
+                  const active = filters.relation === value;
+                  const label = r === "ALL" ? "전체" : r;
+                  return (
+                    <button
+                      key={`rel_chip_${value}`}
+                      type="button"
+                      onClick={() => {
+                        handleSelect(null);
+                        setFilters((f) => ({ ...f, relation: value }));
+                      }}
+                      style={{
+                        flex: "0 0 auto",
+                        scrollSnapAlign: "start",
+                        borderRadius: 999,
+                        border: active ? "none" : "1px solid #cbd5e1",
+                        background: active
+                          ? "linear-gradient(135deg, #ffd8b3 0%, #ffcc99 100%)"
+                          : "rgba(255,255,255,0.72)",
+                        color: active ? "#7c2d12" : "#334155",
+                        padding: "7px 12px",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        whiteSpace: "nowrap",
+                        boxShadow: active ? "0 6px 14px rgba(251, 146, 60, 0.24)" : "none",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <select
+                style={selectStyle}
+                value={filters.relation}
+                onChange={(e) => {
+                  handleSelect(null);
+                  setFilters((f) => ({ ...f, relation: e.target.value }));
+                }}
+              >
+                <option value="ALL">ALL</option>
+                {relations.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          <div style={{ marginTop: 12 }}>
+            <div style={{ fontSize: 12, marginBottom: 6, color: textSub }}>별빛 강조하기</div>
+            <select
+              style={selectStyle}
+              value={intensityMetric}
+              onChange={(e) => setIntensityMetric(e.target.value)}
+            >
+              <option value="count">빈도순</option>
+              <option value="score">강도순</option>
+            </select>
+          </div>
+
+          <div style={{ fontSize: 12, color: textSub, marginTop: 16 }}>
+            Nodes: {graph?.order ?? 0}
+            <br />
+            Edges: {graph?.size ?? 0}
+          </div>
+
+          <hr style={{ margin: "16px 0", borderColor: panelBorder }} />
+          <div style={{ fontSize: 12, color: textSub }}>Tip: 상위 감정군 노드를 클릭하면 하위 감정(E01~E32)이 펼쳐집니다.</div>
+          <div style={{ fontSize: 12, color: textSub, marginTop: 4 }}>Tip: 하위 감정 노드를 클릭하면 해당 감정의 기억 노드만 표시됩니다.</div>
+        </div>
+
+        {/* CENTER: Graph */}
+        <div
+          style={{
+            minHeight: 0,
+            minWidth: 0,
+            background: graphBg,
+            position: "relative",
+            ...(isMobile
+              ? {
+                position: "absolute",
+                inset: "0 0 52px 0",
+                display: mobilePane === "evidence" ? "none" : "block",
+              }
+              : {}),
+          }}
+        >
+          {layoutMode === "galaxy" && (
+            <>
+              <div
+                aria-hidden
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  pointerEvents: "none",
+                  zIndex: 0,
+                  backgroundImage: galaxyStarsLayer,
+                  opacity: 0.62,
+                }}
+              />
+              <div
+                aria-hidden
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  pointerEvents: "none",
+                  zIndex: 0,
+                  backgroundImage: galaxyMistLayer,
+                  opacity: 0.5,
+                  filter: "blur(28px)",
+                  animation: "watercolorFloat 11s ease-in-out infinite",
+                }}
+              />
+              <div
+                aria-hidden
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  pointerEvents: "none",
+                  zIndex: 0,
+                  backgroundImage: "repeating-linear-gradient(0deg, rgba(148, 163, 184, 0.035), rgba(148, 163, 184, 0.035) 1px, transparent 1px, transparent 24px)",
+                  opacity: 0.32,
+                  animation: "galaxyTwinkle 6.8s ease-in-out infinite",
+                }}
+              />
+            </>
+          )}
+          {onOpenHistory && (
+            <button
+              type="button"
+              onClick={() => onOpenHistory(openHistoryPayload ?? { historyId: "" })}
+              style={{
+                position: "absolute",
+                top: 12,
+                left: 12,
+                zIndex: 3,
+                padding: "8px 14px",
+                borderRadius: 999,
+                border: "1px solid #7dd3fc",
+                background: "#e0f2fe",
+                color: "#0c4a6e",
+                backdropFilter: "blur(2px)",
+                cursor: "pointer",
+                fontSize: 12,
+                fontWeight: 700,
+                boxShadow:
+                  "0 8px 24px rgba(14, 116, 144, 0.22), inset 0 1px 0 rgba(255,255,255,0.7)",
+                transition: "transform 120ms ease, filter 120ms ease",
+              }}
+            >
+              대화전문 바로가기
+            </button>
+          )}
+          {alerts.length > 0 && (
+            <div
+              style={{
+                position: "absolute",
+                left: 12,
+                right: 12,
+                bottom: isMobile ? 62 : 14,
+                zIndex: 3,
+                margin: "0 auto",
+                maxWidth: 560,
+                borderRadius: 12,
+                background: "rgba(255, 255, 255, 0.9)",
+                border: "1px solid rgba(226, 232, 240, 0.8)",
+                boxShadow: "0 10px 26px rgba(120, 90, 40, 0.16)",
+                backdropFilter: "blur(6px)",
+                padding: "10px 12px",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: "#0f172a" }}>
+                  최근 {recentDays}일 주요 감정 변화
+                </div>
+                <div style={{ fontSize: 11, color: "#64748b" }}>
+                  비교: 최근 {recentDays}일 vs 이전 {baselineDays}일
+                </div>
+              </div>
+              <div style={{ marginTop: 8, display: "grid", gap: 6 }}>
+                {alerts.slice(0, 3).map((a) => {
+                  const metric = a.metric;
+                  const deltaRaw = metric ? ((Number(metric.recent) || 0) - (Number(metric.baseline) || 0)) : 0;
+                  const deltaPp = metric?.kind === "percent" ? deltaRaw * 100 : deltaRaw;
+                  const tempStyle = reportTemperaturePalette(deltaPp);
+                  const arrow = deltaRaw > 0 ? "▲" : (deltaRaw < 0 ? "▼" : "-");
+                  return (
+                    <div
+                      key={`graph_alert_${a.id}`}
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr auto",
+                        alignItems: "center",
+                        gap: 8,
+                        fontSize: 12,
+                      }}
+                    >
+                      <div style={{ color: "#0f172a", fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {getAlertEmoji(a)} {a.title}
+                      </div>
+                      <div style={{ color: tempStyle.textColor, fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+                        {formatAlertDeltaText(metric)} {arrow}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
+          )}
+          <div style={{ position: "relative", zIndex: 1, height: "100%" }}>
+            {(!isMobile || mobilePane === "graph") && (layoutMode === "globe" ? (
+              <ThreeGlobeView
+                data={data}
+                filters={filters}
+                isDarkMode={isDarkMode}
+                selectedKey={selected?.key ?? null}
+                onSelect={(node) => {
+                  // Three view에서 넘어온 node를 선택 상태로 반영
+                  setSelected(node);
+                  setSecondarySelectedId(null);
+                }}
+              />
+            ) : (
+              <SigmaContainer
+                style={{ height: "100%", width: "100%", background: "transparent" }}
+                graph={graph}
+                settings={{
+                  labelColor: { color: isDarkMode ? "#f1f5f9" : "#0f172a" },
+                  labelSize: 14,
+                  labelWeight: "600",
+                  isDarkMode,
+                  defaultDrawNodeLabel: drawReadableNodeLabel,
+                }}
+              >
+                <GraphEvents onSelect={handleSelect} />
+                <SelectionReducers
+                  selectedId={selected?.key ?? null}
+                  secondarySelectedId={secondarySelectedId}
+                  showEdgesOnHover={showEdgesOnHover}
+                  isDarkMode={isDarkMode}
+                />
+                <EmotionCategoryGlow metricMode={intensityMetric} isDarkMode={isDarkMode} />
+              </SigmaContainer>
+            ))}
+          </div>
+        </div>
+
+        {/* RIGHT: Evidence */}
+        <div
+          style={{
+            padding: 16,
+            borderLeft: `1px solid ${panelBorder}`,
+            overflow: "auto",
+            background: panelBg,
+            boxShadow: panelShadow,
+            zIndex: 2,
+            ...(isMobile
+              ? {
+                position: "absolute",
+                inset: "0 0 52px 0",
+                borderLeft: "none",
+                display: mobilePane === "evidence" ? "block" : "none",
+                zIndex: 6,
+              }
+              : {}),
+          }}
+        >
+          <div style={{ fontWeight: 700, marginBottom: 12 }}>Evidence</div>
+
+          {selected?.ts && (
+            <div style={{ fontSize: 12, color: "#666", marginBottom: 6 }}>
+              time: {String(selected.ts)}
+            </div>
+          )}
+
+
+          {!selected ? (
+            <div style={{ fontSize: 13, color: textSub }}>노드를 선택해 주세요.</div>
+          ) : selected.nodeType === "memory" ? (
+            <>
+              <div style={{ fontSize: 12, color: textSub, marginBottom: 8 }}>
+                emotion: {selected.emotion} / relation: {selected.relation}
+              </div>
+              {onOpenHistory && openHistoryPayload && (
+                <button
+                  type="button"
+                  onClick={() => onOpenHistory(openHistoryPayload)}
+                  style={{
+                    marginBottom: 8,
+                    width: "100%",
+                    padding: "6px 10px",
+                    borderRadius: 8,
+                    border: "1px solid #7dd3fc",
+                    background: "#e0f2fe",
+                    color: "#0c4a6e",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    fontSize: 12,
+                  }}
+                >
+                  대화내역 보기
+                </button>
+              )}
+              <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.5, fontSize: 14 }}>
+                {selected.full_text}
+              </div>
+            </>
+          ) : (
+            <div style={{ fontSize: 13, color: textSub }}>
+              {onOpenHistory && openHistoryPayload && (
+                <button
+                  type="button"
+                  onClick={() => onOpenHistory(openHistoryPayload)}
+                  style={{
+                    marginBottom: 8,
+                    width: "100%",
+                    padding: "6px 10px",
+                    borderRadius: 8,
+                    border: "1px solid #7dd3fc",
+                    background: "#e0f2fe",
+                    color: "#0c4a6e",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    fontSize: 12,
+                  }}
+                >
+                  대화내역 보기
+                </button>
+              )}
+              <div>
+                <b>type</b>: {selected.nodeType}
+              </div>
+              <div>
+                <b>label</b>: {selected.label}
+              </div>
+              <div style={{ marginTop: 8 }}>선택한 노드와 연결된 관계만 표시됩니다.</div>
+            </div>
+          )}
+          <div style={{ marginTop: 12 }}>
+            <button
+              type="button"
+              onClick={() => setIsReportOpen(true)}
+              style={{
+                width: "100%",
+                padding: "8px 10px",
+                borderRadius: 8,
+                border: isDarkMode ? "1px solid #334155" : "1px solid #cbd5e1",
+                background: isDarkMode ? "#111827" : "#f8fafc",
+                color: textMain,
+                cursor: "pointer",
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              📄 주간 리포트 보기
+            </button>
+          </div>
+        </div>
+
+        {isReportOpen && (
+          <div
+            onClick={() => {
+              setIsReportOpen(false);
+              setDeepDiveDetail(null);
+            }}
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 20,
+              background: "rgba(2, 6, 23, 0.36)",
+              backdropFilter: "blur(5px)",
+              display: "grid",
+              placeItems: "center",
+              padding: 20,
+            }}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: "min(880px, calc(100vw - 28px))",
+                maxHeight: "calc(100vh - 40px)",
+                overflow: "auto",
+                borderRadius: 14,
+                border: "1px solid #eadfce",
+                boxShadow: "0 28px 72px rgba(15, 23, 42, 0.25)",
+                background: "linear-gradient(180deg, #f9f2e7 0%, #f4ebdd 100%)",
+                color: "#0f172a",
+                padding: 20,
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <div style={{ fontWeight: 800, fontSize: 20 }}>주간 리포트</div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsReportOpen(false);
+                    setDeepDiveDetail(null);
+                  }}
+                  style={{
+                    padding: "6px 10px",
+                    borderRadius: 8,
+                    border: "1px solid #cbd5e1",
+                    background: "#ffffff",
+                    color: "#0f172a",
+                    cursor: "pointer",
+                    fontWeight: 700,
+                  }}
+                >
+                  닫기
+                </button>
+              </div>
+              <div style={{ fontSize: 13, color: "#334155", marginBottom: 14 }}>
+                감정의 바다에서 특히 두드러진 이번 구간을 핵심 중심으로 요약했습니다.
+              </div>
+              {(() => {
+                const briefing = buildTopNarrativeSummary(alerts, recentDays);
+                return (
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 8 }}>AI 감정 브리핑</div>
+                    <div
+                      style={{
+                        position: "relative",
+                        overflow: "hidden",
+                        borderRadius: 12,
+                        border: "1px solid rgba(255, 255, 255, 0.55)",
+                        background: "linear-gradient(130deg, rgba(255, 204, 153, 0.34) 0%, rgba(103, 232, 249, 0.28) 55%, rgba(255, 204, 153, 0.2) 100%)",
+                        boxShadow: "0 14px 34px rgba(14, 116, 144, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.75)",
+                        padding: "14px 14px 12px",
+                      }}
+                    >
+                      <div
+                        aria-hidden="true"
+                        style={{
+                          position: "absolute",
+                          inset: -28,
+                          background:
+                            "radial-gradient(60% 80% at 15% 20%, rgba(255, 204, 153, 0.5) 0%, rgba(255, 204, 153, 0) 70%), radial-gradient(70% 90% at 82% 68%, rgba(103, 232, 249, 0.52) 0%, rgba(103, 232, 249, 0) 72%)",
+                          filter: "blur(22px)",
+                          transform: "translateZ(0)",
+                        }}
+                      />
+                      <div
+                        style={{
+                          position: "relative",
+                          borderRadius: 10,
+                          border: "1px solid rgba(255, 255, 255, 0.58)",
+                          background: "linear-gradient(180deg, rgba(255,255,255,0.66) 0%, rgba(255,255,255,0.42) 100%)",
+                          backdropFilter: "blur(10px) saturate(130%)",
+                          WebkitBackdropFilter: "blur(10px) saturate(130%)",
+                          padding: "10px 10px 9px",
+                        }}
+                      >
+                        <div style={{ fontSize: 30, lineHeight: 1, marginBottom: 8 }}>{briefing.emoji}</div>
+                        <div style={{ fontSize: 19, fontWeight: 800, color: "#0f172a", lineHeight: 1.42 }}>
+                          "{briefing.message}"
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              <div style={{ fontWeight: 700, marginBottom: 8 }}>즉시 감정 알림</div>
+              <div style={{ fontSize: 12, color: "#475569", marginBottom: 8 }}>
+                가장 큰 변화부터 빠르게 확인하세요. 카드를 좌우로 넘겨볼 수 있습니다.
+              </div>
+              <div
+                style={{
+                  display: "grid",
+                  gridAutoFlow: "column",
+                  gridAutoColumns: "minmax(220px, 72%)",
+                  gap: 10,
+                  overflowX: "auto",
+                  paddingBottom: 6,
+                  marginBottom: 12,
+                  scrollSnapType: "x mandatory",
+                }}
+              >
+                {alerts.slice(0, 6).map((a) => {
+                  const deltaRaw = Number(a?.metric?.delta ?? 0);
+                  const deltaPp = a?.metric?.kind === "percent" ? deltaRaw * 100 : deltaRaw;
+                  const tempStyle = reportTemperaturePalette(deltaPp);
+                  const deltaColor = tempStyle.textColor;
+                  const tagBg = tempStyle.tone === "warm"
+                    ? "rgba(255, 204, 153, 0.32)"
+                    : (tempStyle.tone === "cold" ? "rgba(103, 232, 249, 0.30)" : "rgba(226, 232, 240, 0.66)");
+                  const tagText = tempStyle.tone === "warm"
+                    ? REPORT_TEMP_COLORS.warmText
+                    : (tempStyle.tone === "cold" ? REPORT_TEMP_COLORS.coldText : "#475569");
+                  const arrow = deltaPp > 0.01 ? "▲" : (deltaPp < -0.01 ? "▼" : "-");
+                  const emotionName = emotionLabelOnly(a?.filters?.emotion ?? "감정");
+                  const relationTags = a?.filters?.relation && a.filters.relation !== "ALL"
+                    ? [String(a.filters.relation)]
+                    : alerts
+                      .filter((x) =>
+                        x.type === "RELATION_BIAS" &&
+                        x?.filters?.emotion === a?.filters?.emotion &&
+                        x?.filters?.relation &&
+                        x.filters.relation !== "ALL"
+                      )
+                      .map((x) => String(x.filters.relation))
+                      .slice(0, 2);
+                  const tags = relationTags.length > 0 ? relationTags : ["전체 맥락"];
+                  return (
+                    <div
+                      key={`quick_${a.id}`}
+                      style={{
+                        scrollSnapAlign: "start",
+                        borderRadius: 12,
+                        background: "#ffffff",
+                        padding: "12px 12px 10px",
+                        boxShadow: "0 10px 22px rgba(120, 90, 40, 0.10)",
+                      }}
+                    >
+                      <div style={{ fontSize: 14, fontWeight: 800, color: "#0f172a", lineHeight: 1.35 }}>
+                        {getAlertEmoji(a)} {emotionName} {deltaPp > 0.01 ? "급증" : (deltaPp < -0.01 ? "감소" : "변화")}
+                      </div>
+                      <div
+                        style={{
+                          marginTop: 6,
+                          fontSize: 24,
+                          fontWeight: 900,
+                          color: deltaColor,
+                          lineHeight: 1,
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {deltaPp >= 0 ? "+" : ""}
+                        {deltaPp.toFixed(0)}% {arrow}
+                      </div>
+                      {tempStyle.tone !== "neutral" && (
+                        <div style={{ marginTop: 4, fontSize: 11, color: tempStyle.textColor, fontWeight: 700 }}>
+                          {tempStyle.tone === "warm" ? "현재 감정 온도가 높아졌어요" : "현재 감정 온도가 차분해졌어요"}
+                        </div>
+                      )}
+                      <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {tags.map((tag) => (
+                          <span
+                            key={`${a.id}_${tag}`}
+                            style={{
+                              fontSize: 11,
+                              color: tagText,
+                              background: tagBg,
+                              padding: "2px 8px",
+                              borderRadius: 999,
+                              fontWeight: 700,
+                            }}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+                {alerts.length === 0 && (
+                  <div
+                    style={{
+                      borderRadius: 12,
+                      background: "#ffffff",
+                      padding: 12,
+                      fontSize: 12,
+                      color: "#475569",
+                      boxShadow: "0 10px 22px rgba(120, 90, 40, 0.09)",
+                    }}
+                  >
+                    표본이 충분하지 않아 이번 주 즉시 감정 알림을 만들지 못했습니다.
+                  </div>
+                )}
+              </div>
+
+              <div style={{ fontWeight: 700, marginBottom: 8 }}>보조 지표: 감정 변화 확산 (%)</div>
+              <div
+                style={{
+                  borderRadius: 10,
+                  background: "#ffffff",
+                  padding: 12,
+                  marginBottom: 8,
+                  boxShadow: "0 10px 22px rgba(120, 90, 40, 0.10)",
+                }}
+              >
+                <div style={{ display: "grid", gap: 8 }}>
+                  {(weeklyReport?.deltaEmotionRanking ?? []).slice(0, 6).map((item) => {
+                    const deltaPp = Number(item.deltaPp) || 0;
+                    const valueColor = reportTemperaturePalette(deltaPp).textColor;
+                    return (
+                      <div
+                        key={`delta_rank_${item.emotion}`}
+                        style={{ display: "grid", gridTemplateColumns: "92px 1fr 58px", gap: 8, alignItems: "center" }}
+                      >
+                        <div style={{ fontSize: 12, fontWeight: 700, color: "#0f172a" }}>
+                          {emotionLabelOnly(item.emotion)}
+                        </div>
+                        <div
+                          style={{
+                            height: 30,
+                            borderRadius: 999,
+                            background: "linear-gradient(90deg, rgba(103, 232, 249, 0.12) 0%, rgba(255, 204, 153, 0.1) 100%)",
+                            border: "1px solid rgba(148, 163, 184, 0.22)",
+                            padding: "0 4px",
+                            overflow: "hidden",
+                          }}
+                        >
+                          <EmotionDeltaWave
+                            emotion={item.emotion}
+                            baselineRatio={item.baselineRatio}
+                            recentRatio={item.recentRatio}
+                            deltaPp={deltaPp}
+                          />
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 700,
+                            color: valueColor,
+                            textAlign: "right",
+                            fontVariantNumeric: "tabular-nums",
+                          }}
+                        >
+                          {deltaPp >= 0 ? "+" : ""}
+                          {deltaPp.toFixed(0)}%
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <div style={{ fontSize: 12, color: "#475569", marginBottom: 12 }}>
+                비교: 최근 {recentDays}일 vs 이전 {baselineDays}일 · 표본: {weeklyReport?.recentN ?? 0}/{weeklyReport?.baseN ?? 0}
+              </div>
+
+              <div style={{ fontWeight: 700, marginBottom: 8 }}>관계 감정 딥다이브</div>
+              <div style={{ fontSize: 12, color: "#475569", marginBottom: 8 }}>
+                각 관계에서 어떤 감정 변화가 컸는지 빠르게 확인하세요.
+              </div>
+              <div style={{ display: "grid", gap: 8, marginBottom: 14 }}>
+                {(weeklyReport?.relationDeepDive ?? []).slice(0, 6).map((row) => (
+                  <div
+                    key={`deep_${row.relation}`}
+                    style={{
+                      borderRadius: 10,
+                      background: "#ffffff",
+                      padding: "10px 10px 9px",
+                      boxShadow: "0 10px 22px rgba(120, 90, 40, 0.09)",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: "#0f172a" }}>
+                        {row.relation} {relationEmoji(row.relation)}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#64748b" }}>총 {row.total}건</div>
+                    </div>
+                    <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {(row.items ?? []).map((item) => {
+                        const deltaPp = Number(item.deltaPp) || 0;
+                        const isUp = deltaPp >= 0;
+                        const tempStyle = reportTemperaturePalette(deltaPp);
+                        const tagColor = tempStyle.textColor;
+                        const bg = tempStyle.tone === "warm"
+                          ? "rgba(255, 204, 153, 0.34)"
+                          : (tempStyle.tone === "cold" ? "rgba(103, 232, 249, 0.30)" : "rgba(226, 232, 240, 0.66)");
+                        return (
+                          <button
+                            key={`deep_${row.relation}_${item.emotion}`}
+                            type="button"
+                            onClick={() => {
+                              setDeepDiveDetail({
+                                relation: row.relation,
+                                emotion: item.emotion,
+                                count: item.count,
+                                recentRatio: item.recentRatio,
+                                baselineRatio: item.baselineRatio,
+                                deltaRatio: item.deltaRatio,
+                              });
+                            }}
+                            style={{
+                              border: "none",
+                              background: bg,
+                              color: tagColor,
+                              borderRadius: 999,
+                              padding: "4px 10px",
+                              fontSize: 12,
+                              fontWeight: 800,
+                              cursor: "pointer",
+                            }}
+                          >
+                            {emotionLabelOnly(item.emotion)} {deltaPp >= 0 ? "+" : ""}
+                            {deltaPp.toFixed(0)}% {isUp ? "급증" : "감소"}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+                {(weeklyReport?.relationDeepDive ?? []).length === 0 && (
+                  <div style={{ borderRadius: 10, background: "#ffffff", padding: 12, fontSize: 12, color: "#475569", boxShadow: "0 10px 22px rgba(120, 90, 40, 0.09)" }}>
+                    최근 구간의 관계 감정 변화를 설명할 표본이 없습니다.
+                  </div>
+                )}
+              </div>
+
+            </div>
+            {deepDiveDetail && (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  position: "fixed",
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  zIndex: 30,
+                  background: "#ffffff",
+                  borderTopLeftRadius: 14,
+                  borderTopRightRadius: 14,
+                  boxShadow: "0 -12px 30px rgba(15, 23, 42, 0.24)",
+                  borderTop: "1px solid #e2e8f0",
+                  padding: "12px 14px 14px",
+                }}
+              >
+                <div style={{ width: 44, height: 4, borderRadius: 999, background: "#cbd5e1", margin: "0 auto 10px" }} />
+                <div style={{ fontSize: 14, fontWeight: 800, color: "#0f172a" }}>
+                  {deepDiveDetail.relation} {relationEmoji(deepDiveDetail.relation)} · {emotionLabelOnly(deepDiveDetail.emotion)}
+                </div>
+                <div style={{ marginTop: 6, fontSize: 12, color: "#475569", lineHeight: 1.45 }}>
+                  baseline {(deepDiveDetail.baselineRatio * 100).toFixed(0)}% · recent {(deepDiveDetail.recentRatio * 100).toFixed(0)}%
+                  <br />
+                  변화 {deepDiveDetail.deltaRatio >= 0 ? "+" : ""}
+                  {(deepDiveDetail.deltaRatio * 100).toFixed(0)}% · 총 {deepDiveDetail.count}건
+                </div>
+                <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={() => setDeepDiveDetail(null)}
+                    style={{
+                      flex: 1,
+                      padding: "8px 10px",
+                      borderRadius: 8,
+                      border: "1px solid #cbd5e1",
+                      background: "#ffffff",
+                      color: "#0f172a",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
+                  >
+                    닫기
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      openHeatmapCellInGraph(deepDiveDetail.relation, deepDiveDetail.emotion);
+                      setDeepDiveDetail(null);
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: "8px 10px",
+                      borderRadius: 8,
+                      border: "1px solid #0ea5e9",
+                      background: "#e0f2fe",
+                      color: "#0c4a6e",
+                      fontWeight: 800,
+                      cursor: "pointer",
+                    }}
+                  >
+                    그래프에서 보기
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
-    )}
-  </div>
-  </div>
-);
+    </div>
+  );
 }
 
 
