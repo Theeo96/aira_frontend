@@ -1378,9 +1378,9 @@ const HistoryPage: React.FC<HistoryPageProps> = ({
         const dataArr = useMockData ? payload : (payload.data || []);
 
         if (Array.isArray(dataArr)) {
-          if (useMockData) {
-            setMockHistoryData(dataArr as HistoryItem[]);
-          }
+          // Always set this so the Left Pane can list conversations
+          setMockHistoryData(dataArr as HistoryItem[]);
+
           const allNodes: any[] = [];
           const allEdges: any[] = [];
           dataArr.forEach((item: any) => {

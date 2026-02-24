@@ -2014,7 +2014,23 @@ export default function App({ onOpenHistory, useMockData } = {}) {
           const r = await fetch(path, { cache: "no-store" });
           if (!r.ok) continue;
           const json = await r.json();
-          setData(useMockData ? json : json.data); // API response might wrap data in .data
+          let unified = useMockData ? json : json.data;
+
+          if (Array.isArray(unified)) {
+            const allNodes = [];
+            const allEdges = [];
+            unified.forEach(item => {
+              if (item.graph) {
+                allNodes.push(...(item.graph.nodes || []));
+                allEdges.push(...(item.graph.edges || []));
+              }
+            });
+            const uniqueMap = new Map();
+            allNodes.forEach(n => uniqueMap.set(n.key, n));
+            unified = { nodes: Array.from(uniqueMap.values()), edges: allEdges };
+          }
+
+          setData(unified);
           return;
         } catch {
           // try next candidate
